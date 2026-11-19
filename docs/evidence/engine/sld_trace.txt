@@ -1,0 +1,15 @@
+CASE 1 - MULTIPLE SOLUTIONS
+Steps: [step(1,[],0,start,"parent(ana,A)",none,["parent(ana,A)"],[binding("V1","_")]),step(2,[1],1,apply,"parent(ana,A)","parent(ana,luis)",[],[binding("V1","luis")]),step(3,[1],1,success,none,none,[],[binding("V1","luis")]),step(4,[],0,backtrack,"parent(ana,A)",none,["parent(ana,A)"],[binding("V1","_")]),step(5,[2],1,apply,"parent(ana,A)","parent(ana,marta)",[],[binding("V1","marta")]),step(6,[2],1,success,none,none,[],[binding("V1","marta")])]
+Answers: [answer([1],[binding("V1","luis")]),answer([2],[binding("V1","marta")])]
+
+CASE 2 - FAILURE
+Steps: [step(1,[],0,start,"parent(diego,A)",none,["parent(diego,A)"],[binding("V1","_")]),step(2,[],0,failure,"parent(diego,A)",none,["parent(diego,A)"],[binding("V1","_")])]
+Answers: []
+
+CASE 3 - BACKTRACKING
+Steps: [step(1,[],0,start,"parent(ana,A),parent(A,diego)",none,["parent(ana,A)","parent(A,diego)"],[binding("V1","_")]),step(2,[1],1,apply,"parent(ana,A)","parent(ana,luis)",["parent(luis,diego)"],[binding("V1","luis")]),step(3,[1],1,failure,"parent(luis,diego)",none,["parent(luis,diego)"],[binding("V1","luis")]),step(4,[],0,backtrack,"parent(ana,A)",none,["parent(ana,A)","parent(A,diego)"],[binding("V1","_")]),step(5,[2],1,apply,"parent(ana,A)","parent(ana,marta)",["parent(marta,diego)"],[binding("V1","marta")]),step(6,[2,1],2,apply,"parent(marta,diego)","parent(marta,diego)",[],[binding("V1","marta")]),step(7,[2,1],2,success,none,none,[],[binding("V1","marta")])]
+Answers: [answer([2,1],[binding("V1","marta")])]
+
+CASE 4 - CUTOFF
+Steps: [step(1,[],0,start,"endless",none,["endless"],[]),step(2,[1],1,apply,"endless","endless:-endless",["endless"],[]),step(3,[1,1],2,apply,"endless","endless:-endless",["endless"],[]),step(4,[1,1,1],3,apply,"endless","endless:-endless",["endless"],[]),step(5,[1,1,1],3,cutoff,"endless",none,["endless"],[])]
+Answers: []

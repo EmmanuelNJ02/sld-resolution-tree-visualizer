@@ -1,0 +1,4 @@
+Ancestor solutions depth 4: [luis,marta,sofia,diego]
+Ancestor outcomes depth 2: [success,success,cutoff,cutoff]
+Endless outcomes depth 3: [cutoff]
+Loop outcomes depth 3: [cutoff,success,success,success]
