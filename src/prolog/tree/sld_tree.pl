@@ -43,7 +43,7 @@
 % ------------------------------------------------------------
 
 parent_path(Path, ParentPath) :-
-    append(ParentPath, [_], Path).
+    append(ParentPath, [_], Path), !.
 
 
 % ============================================================
@@ -113,7 +113,7 @@ find_parent_id([], _, none) :- !.
 
 find_parent_id(Path, RawNodes, ParentId) :-
     parent_path(Path, ParentPath),
-    member(raw(ParentId, ParentPath, _, _, _, _, _), RawNodes).
+    member(raw(ParentId, ParentPath, _, _, _, _, _), RawNodes), !.
 
 
 % ------------------------------------------------------------
@@ -423,4 +423,3 @@ export_tree_json(Query, MaxDepth, File) :-
     write_tree_json(Stream, MaxDepth, Nodes, Answers),
     close(Stream).
 
-    
