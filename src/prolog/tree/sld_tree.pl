@@ -18,8 +18,13 @@
 % ============================================================
 
 :- module(sld_tree, [
-    build_tree/2
+    build_tree/2,
+    write_tree_json/4,
+    print_tree_json/2,
+    export_tree_json/3
 ]).
+
+:- use_module('../engine/sld_engine').
 
 
 % ============================================================
@@ -227,5 +232,195 @@ build_tree(Steps, Nodes) :-
     raw_nodes(Steps, RawNodes),
     link_nodes(RawNodes, Linked),
     maplist(complete_node(Linked, Steps), Linked, Nodes).
+
+ % ============================================================
+% 6. JSON OUTPUT HELPERS
+% ============================================================
+
+% ------------------------------------------------------------
+% escape_codes(+Codes, -Escaped)
+%
+% Places a backslash before every  and \ character.
+% ------------------------------------------------------------
+
+escape_codes([], []).
+
+escape_codes([0'" | Rest], [0'\\, 0'" | Escaped]) :-
+    !,
+    escape_codes(Rest, Escaped).
+
+escape_codes([0'\\ | Rest], [0'\\, 0'\\ | Escaped]) :-
+    !,
+    escape_codes(Rest, Escaped).
+
+escape_codes([C | Rest], [C | Escaped]) :-
+    escape_codes(Rest, Escaped).
+
+
+% ------------------------------------------------------------
+% json_text(+Stream, +Text)
+%
+% Writes a text as a JSON string, or null for none.
+% ------------------------------------------------------------
+
+json_text(Stream, none) :-
+    !,
+    write(Stream, null).
+
+json_text(Stream, Text) :-
+    string_codes(Text, Codes),
+    escape_codes(Codes, Escaped),
+    format(Stream, "\"~s\"", [Escaped]).
+
+% ------------------------------------------------------------
+% write_items(+Stream, +Writer, +Items, +Separator)
+%
+% Writes every item with Writer, separated by Separator.
+% Writer is called as call(Writer, Stream, Item).
+% ------------------------------------------------------------
+
+write_items(_, _, [], _).
+
+write_items(Stream, Writer, [Item], _) :-
+    !,
+    call(Writer, Stream, Item).
+
+write_items(Stream, Writer, [Item | Rest], Separator) :-
+    call(Writer, Stream, Item),
+    write(Stream, Separator),
+    write_items(Stream, Writer, Rest, Separator).
+
+
+% ------------------------------------------------------------
+% Small JSON writers
+% ------------------------------------------------------------
+
+json_id(Stream, none) :-
+    !,
+    write(Stream, null).
+
+json_id(Stream, Id) :-
+    format(Stream, "\"~w\"", [Id]).
+
+json_text_list(Stream, Texts) :-
+    write(Stream, '['),
+    write_items(Stream, json_text, Texts, ', '),
+    write(Stream, ']').
+
+json_id_list(Stream, Ids) :-
+    write(Stream, '['),
+    write_items(Stream, json_id, Ids, ', '),
+    write(Stream, ']').
+
+json_binding(Stream, binding(Variable, Value)) :-
+    write(Stream, '{"var": '),
+    json_text(Stream, Variable),
+    write(Stream, ', "value": '),
+    json_text(Stream, Value),
+    write(Stream, '}').
+
+json_bindings(Stream, Bindings) :-
+    write(Stream, '['),
+    write_items(Stream, json_binding, Bindings, ', '),
+    write(Stream, ']').
+
+
+% ============================================================
+% 7. JSON TREE EXPORT
+% ============================================================
+
+% ------------------------------------------------------------
+% json_node(+Nodes, +Stream, +Node)
+%
+% Writes one node. Nodes is needed to find its children.
+% ------------------------------------------------------------
+
+json_node(
+    Nodes,
+    Stream,
+    node(Id, ParentId, Path, Depth, Goal, Clause, Pending, Bindings, Status)
+) :-
+    findall(
+        ChildId,
+        member(node(ChildId, Id, _, _, _, _, _, _, _), Nodes),
+        Children
+    ),
+    format(Stream, "    {\"id\": \"~w\", \"parent\": ", [Id]),
+    json_id(Stream, ParentId),
+    format(Stream, ", \"path\": ~w, \"depth\": ~w,~n", [Path, Depth]),
+    write(Stream, '     "goal": '),
+    json_text(Stream, Goal),
+    write(Stream, ', "clause": '),
+    json_text(Stream, Clause),
+    format(Stream, ",~n", []),
+    write(Stream, '     "pending": '),
+    json_text_list(Stream, Pending),
+    write(Stream, ', "bindings": '),
+    json_bindings(Stream, Bindings),
+    format(Stream, ",~n", []),
+    format(Stream, "     \"status\": \"~w\", \"children\": ", [Status]),
+    json_id_list(Stream, Children),
+    write(Stream, '}').
+
+
+% ------------------------------------------------------------
+% json_answer(+Nodes, +Stream, +Answer)
+%
+% Writes one answer, pointing to the node of its success path.
+% ------------------------------------------------------------
+
+json_answer(Nodes, Stream, answer(Path, Bindings)) :-
+    member(node(Id, _, Path, _, _, _, _, _, _), Nodes),
+    !,
+    format(Stream, "    {\"node\": \"~w\", \"bindings\": ", [Id]),
+    json_bindings(Stream, Bindings),
+    write(Stream, '}').
+
+
+% ------------------------------------------------------------
+% write_tree_json(+Stream, +MaxDepth, +Nodes, +Answers)
+%
+% The query text is taken from the root node.
+% ------------------------------------------------------------
+
+write_tree_json(Stream, MaxDepth, Nodes, Answers) :-
+    Nodes = [node(_, _, _, _, Query, _, _, _, _) | _],
+    format(Stream, "{~n", []),
+    write(Stream, '  "query": '),
+    json_text(Stream, Query),
+    format(Stream, ",~n  \"maxDepth\": ~w,~n", [MaxDepth]),
+    format(Stream, "  \"nodes\": [~n", []),
+    write_items(Stream, json_node(Nodes), Nodes, ',\n'),
+    format(Stream, "~n  ],~n", []),
+    format(Stream, "  \"answers\": [~n", []),
+    write_items(Stream, json_answer(Nodes), Answers, ',\n'),
+    format(Stream, "~n  ]~n}~n", []).
+
+
+% ------------------------------------------------------------
+% print_tree_json(+Query, +MaxDepth)
+%
+% Resolves the query (Part A), builds the tree and prints
+% its JSON on the screen.
+% ------------------------------------------------------------
+
+print_tree_json(Query, MaxDepth) :-
+    sld_trace(Query, MaxDepth, Steps, Answers),
+    build_tree(Steps, Nodes),
+    write_tree_json(user_output, MaxDepth, Nodes, Answers).
+
+
+% ------------------------------------------------------------
+% export_tree_json(+Query, +MaxDepth, +File)
+%
+% Same as print_tree_json/2, but writes the JSON to a file.
+% ------------------------------------------------------------
+
+export_tree_json(Query, MaxDepth, File) :-
+    sld_trace(Query, MaxDepth, Steps, Answers),
+    build_tree(Steps, Nodes),
+    open(File, write, Stream, [encoding(utf8)]),
+    write_tree_json(Stream, MaxDepth, Nodes, Answers),
+    close(Stream).
 
     
