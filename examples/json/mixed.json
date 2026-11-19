@@ -1,0 +1,39 @@
+{
+  "query": "loop",
+  "maxDepth": 3,
+  "nodes": [
+    {"id": "n0", "parent": null, "path": [], "depth": 0,
+     "goal": "loop", "clause": null,
+     "pending": ["loop"], "bindings": [],
+     "status": "success", "children": ["n1", "n6"]},
+    {"id": "n1", "parent": "n0", "path": [1], "depth": 1,
+     "goal": "loop", "clause": "loop:-loop",
+     "pending": ["loop"], "bindings": [],
+     "status": "success", "children": ["n2", "n5"]},
+    {"id": "n2", "parent": "n1", "path": [1,1], "depth": 2,
+     "goal": "loop", "clause": "loop:-loop",
+     "pending": ["loop"], "bindings": [],
+     "status": "success", "children": ["n3", "n4"]},
+    {"id": "n3", "parent": "n2", "path": [1,1,1], "depth": 3,
+     "goal": "loop", "clause": "loop:-loop",
+     "pending": ["loop"], "bindings": [],
+     "status": "cutoff", "children": []},
+    {"id": "n4", "parent": "n2", "path": [1,1,2], "depth": 3,
+     "goal": "loop", "clause": "loop",
+     "pending": [], "bindings": [],
+     "status": "success", "children": []},
+    {"id": "n5", "parent": "n1", "path": [1,2], "depth": 2,
+     "goal": "loop", "clause": "loop",
+     "pending": [], "bindings": [],
+     "status": "success", "children": []},
+    {"id": "n6", "parent": "n0", "path": [2], "depth": 1,
+     "goal": "loop", "clause": "loop",
+     "pending": [], "bindings": [],
+     "status": "success", "children": []}
+  ],
+  "answers": [
+    {"node": "n4", "bindings": []},
+    {"node": "n5", "bindings": []},
+    {"node": "n6", "bindings": []}
+  ]
+}

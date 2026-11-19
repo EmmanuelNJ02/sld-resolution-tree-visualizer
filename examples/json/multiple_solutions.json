@@ -1,0 +1,22 @@
+{
+  "query": "parent(ana,A)",
+  "maxDepth": 3,
+  "nodes": [
+    {"id": "n0", "parent": null, "path": [], "depth": 0,
+     "goal": "parent(ana,A)", "clause": null,
+     "pending": ["parent(ana,A)"], "bindings": [{"var": "V1", "value": "_"}],
+     "status": "success", "children": ["n1", "n2"]},
+    {"id": "n1", "parent": "n0", "path": [1], "depth": 1,
+     "goal": "parent(ana,A)", "clause": "parent(ana,luis)",
+     "pending": [], "bindings": [{"var": "V1", "value": "luis"}],
+     "status": "success", "children": []},
+    {"id": "n2", "parent": "n0", "path": [2], "depth": 1,
+     "goal": "parent(ana,A)", "clause": "parent(ana,marta)",
+     "pending": [], "bindings": [{"var": "V1", "value": "marta"}],
+     "status": "success", "children": []}
+  ],
+  "answers": [
+    {"node": "n1", "bindings": [{"var": "V1", "value": "luis"}]},
+    {"node": "n2", "bindings": [{"var": "V1", "value": "marta"}]}
+  ]
+}
