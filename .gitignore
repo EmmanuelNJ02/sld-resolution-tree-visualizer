@@ -1,0 +1,40 @@
+# ============================================================
+# SLD Resolution Tree Visualizer
+# Git Ignore Configuration
+# EIF400 - Programming Paradigms
+# Group 04-10am
+# ============================================================
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE and editor files
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+
+# SWI-Prolog generated files
+*.qlf
+
+# JavaScript dependencies and build output
+node_modules/
+dist/
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.log
+tmp/
+temp/
+
+# Local environment configuration
+.env
+.env.*
+!.env.example
