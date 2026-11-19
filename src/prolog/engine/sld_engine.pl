@@ -7,31 +7,39 @@
 % Group: 04-10am
 % ============================================================
 %
-% Initial implementation:
+% Implemented:
 % - Facts and definite Horn-clause rules
 % - Leftmost goal selection
 % - Unification
 % - Recursive resolution
-% - Prolog backtracking
+% - Backtracking
+% - Multiple solutions
+% - Configurable depth limit
+% - Success, failure, and cutoff outcomes
 %
 % Pending:
-% - Configurable depth limit
 % - Resolution step generation
-% - Complete individual tests
+% - Complete automated tests
+% - Integration with Part B
 % ============================================================
 
 :- module(sld_engine, [
-    sld_solve/1
+    sld_solve/1,
+    sld_solve_limited/3
 ]).
 
 :- use_module(library(lists), [append/3]).
 
+
+% ============================================================
+% 1. BASIC SLD META-INTERPRETER
+% ============================================================
+
 % ------------------------------------------------------------
 % sld_solve(+Query)
 %
-% Entry point for the initial SLD meta-interpreter.
-%
-% Query is a logical goal or a conjunction of goals.
+% Resolves a query using SLD resolution.
+% This initial predicate does not enforce a depth limit.
 % ------------------------------------------------------------
 
 sld_solve(Query) :-
@@ -42,21 +50,15 @@ sld_solve(Query) :-
 % ------------------------------------------------------------
 % goals_to_list(+Query, -Goals)
 %
-% Converts a goal or conjunction into a list of goals.
+% Converts a conjunction into a list of goals.
 % ------------------------------------------------------------
 
-% The empty goal succeeds.
-
 goals_to_list(true, []).
-
-% A conjunction is converted into a list.
 
 goals_to_list((Left, Right), Goals) :-
     goals_to_list(Left, LeftGoals),
     goals_to_list(Right, RightGoals),
     append(LeftGoals, RightGoals, Goals).
-
-% An individual goal becomes a one-element list.
 
 goals_to_list(Goal, [Goal]) :-
     callable(Goal),
@@ -67,26 +69,92 @@ goals_to_list(Goal, [Goal]) :-
 % ------------------------------------------------------------
 % resolve_goals(+Goals)
 %
-% Resolves the pending goals using SLD resolution.
+% Resolves the pending goals using leftmost selection.
 % ------------------------------------------------------------
 
-% Success: no goals remain to be resolved.
+% Success: no pending goals.
 
 resolve_goals([]).
 
-% Select the leftmost goal and resolve it.
+% Resolve the leftmost goal.
 
 resolve_goals([Goal | PendingGoals]) :-
+    clause(user:Goal, Body),
+    goals_to_list(Body, BodyGoals),
+    append(BodyGoals, PendingGoals, NextGoals),
+    resolve_goals(NextGoals).
 
-    % Select an applicable clause from the user program.
-    % Unification is performed by Prolog.
+
+% ============================================================
+% 2. DEPTH-LIMITED SLD RESOLUTION
+% ============================================================
+
+% ------------------------------------------------------------
+% sld_solve_limited(+Query, +MaxDepth, -Outcome)
+%
+% Resolves a query with a configurable depth limit.
+%
+% The predicate explores alternatives through backtracking
+% and reports terminal outcomes for individual branches.
+%
+% Possible outcomes:
+%
+% success - All goals have been satisfied.
+% failure - No applicable clause exists for a selected goal.
+% cutoff  - The depth limit prevents further expansion.
+% ------------------------------------------------------------
+
+sld_solve_limited(Query, MaxDepth, Outcome) :-
+    integer(MaxDepth),
+    MaxDepth >= 0,
+    goals_to_list(Query, Goals),
+    resolve_limited(Goals, 0, MaxDepth, Outcome).
+
+
+% ------------------------------------------------------------
+% resolve_limited(+Goals, +Depth, +MaxDepth, -Outcome)
+%
+% Performs depth-limited SLD resolution.
+% ------------------------------------------------------------
+
+% Case 1:
+% All goals have been satisfied.
+
+resolve_limited([], _, _, success).
+
+
+% Case 2:
+% The maximum depth has been reached while goals remain.
+
+resolve_limited([_ | _], Depth, MaxDepth, cutoff) :-
+    Depth >= MaxDepth.
+
+
+% Case 3:
+% Select an applicable clause and continue resolution.
+
+resolve_limited([Goal | PendingGoals], Depth, MaxDepth, Outcome) :-
+    Depth < MaxDepth,
+
+    % Select and unify an applicable clause.
     clause(user:Goal, Body),
 
-    % Convert the clause body into a list of goals.
+    % Obtain the goals from the clause body.
     goals_to_list(Body, BodyGoals),
 
     % Replace the selected goal with the clause body.
     append(BodyGoals, PendingGoals, NextGoals),
 
+    % Increase the resolution depth.
+    NextDepth is Depth + 1,
+
     % Continue resolving the remaining goals.
-    resolve_goals(NextGoals).
+    resolve_limited(NextGoals, NextDepth, MaxDepth, Outcome).
+
+
+% Case 4:
+% No clause can be unified with the selected goal.
+
+resolve_limited([Goal | _], Depth, MaxDepth, failure) :-
+    Depth < MaxDepth,
+    \+ clause(user:Goal, _).
