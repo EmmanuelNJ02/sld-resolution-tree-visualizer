@@ -215,7 +215,7 @@ swipl --version
 - [x] Initial directory structure prepared locally.
 - [ ] Initial project scaffold committed and merged.
 - [ ] Part A implemented and tested.
-- [ ] Part B implemented and tested.
+- [x] Part B implemented and tested (see `docs/TREE_TECHNICAL.md` and `docs/TREE_JSON_FORMAT.md`).
 - [ ] Part C implemented and tested.
 - [ ] Integration tests completed.
 - [ ] Final documentation and demonstration completed.

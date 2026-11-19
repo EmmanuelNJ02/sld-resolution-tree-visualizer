@@ -1,0 +1,46 @@
+
+QUERY: parent(ana,_1226)  MAX DEPTH: 3
+node(n0,none,[],0,"parent(ana,A)",none,["parent(ana,A)"],[binding("V1","_")],success)
+node(n1,n0,[1],1,"parent(ana,A)","parent(ana,luis)",[],[binding("V1","luis")],success)
+node(n2,n0,[2],1,"parent(ana,A)","parent(ana,marta)",[],[binding("V1","marta")],success)
+
+QUERY: parent(diego,_1244)  MAX DEPTH: 3
+node(n0,none,[],0,"parent(diego,A)",none,["parent(diego,A)"],[binding("V1","_")],failure)
+
+QUERY: parent(ana,_1262),parent(_1262,diego)  MAX DEPTH: 3
+node(n0,none,[],0,"parent(ana,A),parent(A,diego)",none,["parent(ana,A)","parent(A,diego)"],[binding("V1","_")],success)
+node(n1,n0,[1],1,"parent(ana,A)","parent(ana,luis)",["parent(luis,diego)"],[binding("V1","luis")],failure)
+node(n2,n0,[2],1,"parent(ana,A)","parent(ana,marta)",["parent(marta,diego)"],[binding("V1","marta")],success)
+node(n3,n2,[2,1],2,"parent(marta,diego)","parent(marta,diego)",[],[binding("V1","marta")],success)
+
+QUERY: ancestor(ana,_1292)  MAX DEPTH: 4
+node(n0,none,[],0,"ancestor(ana,A)",none,["ancestor(ana,A)"],[binding("V1","_")],success)
+node(n1,n0,[1],1,"ancestor(ana,A)","ancestor(ana,A):-parent(ana,A)",["parent(ana,A)"],[binding("V1","_")],success)
+node(n2,n1,[1,1],2,"parent(ana,A)","parent(ana,luis)",[],[binding("V1","luis")],success)
+node(n3,n1,[1,2],2,"parent(ana,A)","parent(ana,marta)",[],[binding("V1","marta")],success)
+node(n4,n0,[2],1,"ancestor(ana,A)","ancestor(ana,A):-parent(ana,B),ancestor(B,A)",["parent(ana,A)","ancestor(A,B)"],[binding("V1","_")],success)
+node(n5,n4,[2,1],2,"parent(ana,A)","parent(ana,luis)",["ancestor(luis,A)"],[binding("V1","_")],success)
+node(n6,n5,[2,1,1],3,"ancestor(luis,A)","ancestor(luis,A):-parent(luis,A)",["parent(luis,A)"],[binding("V1","_")],success)
+node(n7,n6,[2,1,1,1],4,"parent(luis,A)","parent(luis,sofia)",[],[binding("V1","sofia")],success)
+node(n8,n5,[2,1,2],3,"ancestor(luis,A)","ancestor(luis,A):-parent(luis,B),ancestor(B,A)",["parent(luis,A)","ancestor(A,B)"],[binding("V1","_")],cutoff)
+node(n9,n8,[2,1,2,1],4,"parent(luis,A)","parent(luis,sofia)",["ancestor(sofia,A)"],[binding("V1","_")],cutoff)
+node(n10,n4,[2,2],2,"parent(ana,A)","parent(ana,marta)",["ancestor(marta,A)"],[binding("V1","_")],success)
+node(n11,n10,[2,2,1],3,"ancestor(marta,A)","ancestor(marta,A):-parent(marta,A)",["parent(marta,A)"],[binding("V1","_")],success)
+node(n12,n11,[2,2,1,1],4,"parent(marta,A)","parent(marta,diego)",[],[binding("V1","diego")],success)
+node(n13,n10,[2,2,2],3,"ancestor(marta,A)","ancestor(marta,A):-parent(marta,B),ancestor(B,A)",["parent(marta,A)","ancestor(A,B)"],[binding("V1","_")],cutoff)
+node(n14,n13,[2,2,2,1],4,"parent(marta,A)","parent(marta,diego)",["ancestor(diego,A)"],[binding("V1","_")],cutoff)
+
+QUERY: endless  MAX DEPTH: 3
+node(n0,none,[],0,"endless",none,["endless"],[],cutoff)
+node(n1,n0,[1],1,"endless","endless:-endless",["endless"],[],cutoff)
+node(n2,n1,[1,1],2,"endless","endless:-endless",["endless"],[],cutoff)
+node(n3,n2,[1,1,1],3,"endless","endless:-endless",["endless"],[],cutoff)
+
+QUERY: loop  MAX DEPTH: 3
+node(n0,none,[],0,"loop",none,["loop"],[],success)
+node(n1,n0,[1],1,"loop","loop:-loop",["loop"],[],success)
+node(n2,n1,[1,1],2,"loop","loop:-loop",["loop"],[],success)
+node(n3,n2,[1,1,1],3,"loop","loop:-loop",["loop"],[],cutoff)
+node(n4,n2,[1,1,2],3,"loop","loop",[],[],success)
+node(n5,n1,[1,2],2,"loop","loop",[],[],success)
+node(n6,n0,[2],1,"loop","loop",[],[],success)
