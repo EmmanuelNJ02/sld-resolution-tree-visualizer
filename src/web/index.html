@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Visualizador web de árboles de resolución SLD en formato JSON.">
+  <title>Visualizador de árboles SLD</title>
+  <link rel="stylesheet" href="css/visualizer.css">
+  <script src="js/visualizer.js" defer></script>
+</head>
+<body>
+  <header class="page-header">
+    <div class="page-header__content">
+      <p class="eyebrow">Programación lógica · Prolog</p>
+      <h1>Árbol de resolución SLD</h1>
+      <p>Explora las metas, cláusulas y sustituciones generadas durante la resolución.</p>
+    </div>
+  </header>
+
+  <main class="page-content">
+    <section class="panel source-panel" aria-labelledby="source-title">
+      <div>
+        <h2 id="source-title">Cargar datos</h2>
+        <p>Selecciona un JSON exportado por el constructor del árbol.</p>
+      </div>
+      <div class="source-controls">
+        <label class="file-picker">
+          <span>Elegir archivo JSON</span>
+          <input id="json-file" type="file" accept=".json,application/json">
+        </label>
+        <label class="example-picker" for="example-select">Ejemplos
+          <select id="example-select">
+            <option value="">Selecciona un ejemplo</option>
+            <option value="backtracking">Backtracking</option>
+            <option value="multiple_solutions">Soluciones múltiples</option>
+            <option value="failure">Fallo</option>
+            <option value="recursion">Recursión</option>
+            <option value="cutoff">Límite de profundidad</option>
+            <option value="mixed">Recursión con alternativas</option>
+          </select>
+        </label>
+        <button id="load-example" class="button button--secondary" type="button">Cargar ejemplo</button>
+      </div>
+      <p id="load-message" class="load-message" role="status" aria-live="polite">
+        Carga un archivo o un ejemplo para comenzar.
+      </p>
+    </section>
+
+    <section id="tree-section" class="tree-section" aria-labelledby="tree-title" hidden>
+      <div class="tree-heading">
+        <div>
+          <p class="eyebrow">Consulta</p>
+          <h2 id="tree-title" class="query-text"></h2>
+        </div>
+        <div id="tree-summary" class="summary-list" aria-label="Resumen del árbol"></div>
+      </div>
+
+      <div class="legend panel" aria-label="Leyenda de estados">
+        <span><i class="legend-dot status-success"></i> Éxito</span>
+        <span><i class="legend-dot status-failure"></i> Fallo</span>
+        <span><i class="legend-dot status-cutoff"></i> Límite alcanzado</span>
+      </div>
+
+      <div class="tree-viewport panel">
+        <div id="tree-canvas" class="tree-canvas">
+          <svg id="tree-connections" class="tree-connections" aria-hidden="true"></svg>
+          <ul id="tree-root" class="tree" aria-label="Árbol de resolución"></ul>
+        </div>
+      </div>
+
+      <section id="node-details" class="panel details-panel" aria-labelledby="details-title" aria-live="polite">
+        <h2 id="details-title">Detalle del nodo</h2>
+        <p>Selecciona un nodo del árbol para consultar toda su información.</p>
+      </section>
+    </section>
+  </main>
+</body>
+</html>

@@ -197,7 +197,13 @@ Check the SWI-Prolog installation:
 swipl --version
 ```
 
-> The application is not executable yet. Commands for running the engine, exporting JSON, and viewing the tree will be added when those components are implemented and tested.
+To view a JSON tree in the browser, start a local server from the repository root and open `http://localhost:8000/src/web/`:
+
+```powershell
+python -m http.server 8000
+```
+
+The web visualizer can load the provided examples or a JSON file exported by Part B. See [docs/WEB_VISUALIZER.md](docs/WEB_VISUALIZER.md) for usage and current limitations.
 
 ## Collaboration Workflow
 
@@ -216,7 +222,7 @@ swipl --version
 - [ ] Initial project scaffold committed and merged.
 - [ ] Part A implemented and tested.
 - [x] Part B implemented and tested (see `docs/TREE_TECHNICAL.md` and `docs/TREE_JSON_FORMAT.md`).
-- [ ] Part C implemented and tested.
+- [x] Part C initial web visualizer implemented; browser testing and integration remain pending.
 - [ ] Integration tests completed.
 - [ ] Final documentation and demonstration completed.
 
