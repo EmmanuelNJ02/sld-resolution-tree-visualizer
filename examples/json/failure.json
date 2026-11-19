@@ -1,0 +1,13 @@
+{
+  "query": "parent(diego,A)",
+  "maxDepth": 3,
+  "nodes": [
+    {"id": "n0", "parent": null, "path": [], "depth": 0,
+     "goal": "parent(diego,A)", "clause": null,
+     "pending": ["parent(diego,A)"], "bindings": [{"var": "V1", "value": "_"}],
+     "status": "failure", "children": []}
+  ],
+  "answers": [
+
+  ]
+}

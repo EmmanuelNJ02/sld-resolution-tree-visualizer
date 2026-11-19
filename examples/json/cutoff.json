@@ -1,0 +1,25 @@
+{
+  "query": "endless",
+  "maxDepth": 3,
+  "nodes": [
+    {"id": "n0", "parent": null, "path": [], "depth": 0,
+     "goal": "endless", "clause": null,
+     "pending": ["endless"], "bindings": [],
+     "status": "cutoff", "children": ["n1"]},
+    {"id": "n1", "parent": "n0", "path": [1], "depth": 1,
+     "goal": "endless", "clause": "endless:-endless",
+     "pending": ["endless"], "bindings": [],
+     "status": "cutoff", "children": ["n2"]},
+    {"id": "n2", "parent": "n1", "path": [1,1], "depth": 2,
+     "goal": "endless", "clause": "endless:-endless",
+     "pending": ["endless"], "bindings": [],
+     "status": "cutoff", "children": ["n3"]},
+    {"id": "n3", "parent": "n2", "path": [1,1,1], "depth": 3,
+     "goal": "endless", "clause": "endless:-endless",
+     "pending": ["endless"], "bindings": [],
+     "status": "cutoff", "children": []}
+  ],
+  "answers": [
+
+  ]
+}
