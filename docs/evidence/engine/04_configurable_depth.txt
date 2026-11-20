@@ -1,0 +1,7 @@
+
+=== CONFIGURABLE DEPTH CONTROL ===
+
+Maximum depth 2 : [success,success,cutoff,cutoff]
+Maximum depth 4 : [success,success,success,cutoff,success,cutoff]
+
+RESULT: PASSED

@@ -1,0 +1,14 @@
+
+=== STRUCTURED SLD EVENTS (step/8) ===
+step(1,[],0,start,"parent(ana,A)",none,["parent(ana,A)"],[binding("V1","_")])
+step(2,[1],1,apply,"parent(ana,A)","parent(ana,luis)",[],[binding("V1","luis")])
+step(3,[1],1,success,none,none,[],[binding("V1","luis")])
+step(4,[],0,backtrack,"parent(ana,A)",none,["parent(ana,A)"],[binding("V1","_")])
+step(5,[2],1,apply,"parent(ana,A)","parent(ana,marta)",[],[binding("V1","marta")])
+step(6,[2],1,success,none,none,[],[binding("V1","marta")])
+
+=== SOLUTIONS (answer/2) ===
+answer([1],[binding("V1","luis")])
+answer([2],[binding("V1","marta")])
+
+RESULT: PASSED

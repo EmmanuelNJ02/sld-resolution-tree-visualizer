@@ -1,0 +1,25 @@
+
+======================================================================
+  PART A - DEMONSTRATION SUMMARY
+======================================================================
+
+  Total demonstration cases: 12
+
+ No.  | Scenario                                         | Exp. | Got  | Result
+------+--------------------------------------------------+------+------+----------------
+ 1    | Multiple solutions from facts                    | 2    | 2    | RESULT: PASSED
+ 2    | Single fact solution - Luis                      | 1    | 1    | RESULT: PASSED
+ 3    | Single fact solution - Marta                     | 1    | 1    | RESULT: PASSED
+ 4    | Failed fact query                                | 0    | 0    | RESULT: PASSED
+ 5    | Successful ground query                          | 1    | 1    | RESULT: PASSED
+ 6    | Failed ground query                              | 0    | 0    | RESULT: PASSED
+ 7    | Conjunction and shared variables                 | 2    | 2    | RESULT: PASSED
+ 8    | Backtracking after a failed alternative          | 1    | 1    | RESULT: PASSED
+ 9    | Recursive ancestor resolution                    | 4    | 4    | RESULT: PASSED
+ 10   | Recursive predicate with one solution            | 1    | 1    | RESULT: PASSED
+ 11   | Infinite recursion stopped by depth limit        | 0    | 0    | RESULT: PASSED
+ 12   | Left recursion with successful alternatives      | 3    | 3    | RESULT: PASSED
+
+======================================================================
+  Total passed: 12 / 12
+======================================================================
