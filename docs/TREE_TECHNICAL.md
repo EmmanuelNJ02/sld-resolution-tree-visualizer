@@ -269,18 +269,18 @@ write_items(Stream, Writer, [Item | Rest], Separator) :-
 
 `write_items/4` does not know what it writes; it is a combinator, like `star`/`plus` in DCG parsers. The same predicate writes lists of texts (`json_text`), identifiers (`json_id`), bindings (`json_binding`), nodes (`json_node(Nodes)`) and answers (`json_answer(Nodes)`); the last two use partial application to pass the node list.
 
-### 8.3. Alternative: `library(http/json)`
+### 8.3. Alternative considered: `library(http/json)`
 
-For comparison, the module also provides `print_tree_json_lib/2`, `export_tree_json_lib/3` and `write_tree_json_lib/4`. They convert each node into a SWI-Prolog **dict** (`node_dict/3`, `binding_dict/2`, `answer_dict/3`, `tree_dict/4`, mostly with `maplist/3`) and write it with `json_write_dict/2`.
+SWI-Prolog can also generate JSON by converting each node into a **dict** and writing it with `json_write_dict/2`. This alternative was considered and **not included** in the component:
 
-| | Manual writer (main) | Library (alternative) |
+| | Manual writer (implemented) | Library (not included) |
 |---|---|---|
 | Course techniques | all | dicts; `json_write_dict/2` is a black box |
 | Escaping and commas | controlled by the component | done by the library |
 | Field order | as documented | alphabetical (dicts are ordered by key) |
 | Code size | larger | smaller |
 
-Both produce the same data. The manual writer is the one used by the examples, the tests and Part C. The library is used in the integration tests only as an **independent validator**: if `json_read_dict/2` can read the file, the JSON is valid.
+The library is used only in the integration tests, as an **independent validator**: if `json_read_dict/2` can read the exported file, the JSON is valid.
 
 ## 9. Usage
 
