@@ -1,0 +1,107 @@
+
+======================================================================
+  SLD RESOLUTION ENGINE - PART A
+======================================================================
+
+  CASE 7: Conjunction and shared variables
+
+  Query          : parent(ana,A),parent(A,B)
+  Maximum depth  : 2
+  Expected       : 2 solution(s)
+  Actual         : 2 solution(s)
+
+======================================================================
+  RESOLUTION TRACE
+======================================================================
+
+  Total recorded events: 8
+
+  STEP 1 | start
+  --------------------------------------------------------------------
+  Path           : []
+  Depth          : 0
+  Selected goal  : parent(ana,A),parent(A,B)
+  Bindings       : V1=_, V2=_
+
+  STEP 2 | apply
+  --------------------------------------------------------------------
+  Path           : [1]
+  Depth          : 1
+  Selected goal  : parent(ana,A)
+  Applied clause : parent(ana,luis)
+  Remaining goals: [parent(luis,A)]
+  Bindings       : V1=luis, V2=_
+
+  STEP 3 | apply
+  --------------------------------------------------------------------
+  Path           : [1,1]
+  Depth          : 2
+  Selected goal  : parent(luis,A)
+  Applied clause : parent(luis,sofia)
+  Remaining goals: []
+  Bindings       : V1=luis, V2=sofia
+
+  STEP 4 | success
+  --------------------------------------------------------------------
+  Path           : [1,1]
+  Depth          : 2
+  Selected goal  : none
+  Bindings       : V1=luis, V2=sofia
+
+  STEP 5 | backtrack
+  --------------------------------------------------------------------
+  Path           : []
+  Depth          : 0
+  Selected goal  : parent(ana,A)
+  Bindings       : V1=_, V2=_
+
+  STEP 6 | apply
+  --------------------------------------------------------------------
+  Path           : [2]
+  Depth          : 1
+  Selected goal  : parent(ana,A)
+  Applied clause : parent(ana,marta)
+  Remaining goals: [parent(marta,A)]
+  Bindings       : V1=marta, V2=_
+
+  STEP 7 | apply
+  --------------------------------------------------------------------
+  Path           : [2,1]
+  Depth          : 2
+  Selected goal  : parent(marta,A)
+  Applied clause : parent(marta,diego)
+  Remaining goals: []
+  Bindings       : V1=marta, V2=diego
+
+  STEP 8 | success
+  --------------------------------------------------------------------
+  Path           : [2,1]
+  Depth          : 2
+  Selected goal  : none
+  Bindings       : V1=marta, V2=diego
+
+======================================================================
+  SUCCESSFUL ANSWERS
+======================================================================
+
+ No. | Path           | Variable bindings
+-----+----------------+------------------------------------------
+ 1   | [1,1]          | V1=luis, V2=sofia
+ 2   | [2,1]          | V1=marta, V2=diego
+
+======================================================================
+  EXECUTION SUMMARY
+======================================================================
+
+  Recorded steps       : 8
+  Successful answers   : 2
+  Successful branches  : 2
+  Failed branches      : 0
+  Depth cutoffs        : 0
+  Backtracking events  : 1
+
+======================================================================
+  FINAL RESULT
+======================================================================
+
+  RESULT: PASSED

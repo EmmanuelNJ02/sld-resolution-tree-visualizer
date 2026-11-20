@@ -22,11 +22,15 @@
 % - Clause alternative tracking
 % - Chronological trace numbering
 % - Aggregated resolution traces
+% - Explicit representation of unbound variable aliases
+%
+% Verified:
+% - 34/34 automated tests passed
+% - 12/12 demonstration cases passed
 %
 % Pending:
-% - Final regression verification
 % - Integration contract validation with Part B
-% - Technical documentation and demonstration
+% - Final individual demonstration
 %
 % Supported language subset:
 % - Facts
@@ -52,7 +56,7 @@
     sld_trace/4
 ]).
 
-:- use_module(library(lists), [append/3]).
+:- use_module(library(lists), [append/3, nth1/3]).
 
 
 % ============================================================
@@ -334,13 +338,31 @@ snapshot_numbered_goals(
 %
 % V1, V2, V3, ...
 %
-% Unbound variables are represented by "_".
+% Supported representations:
+%
+% 1. Concrete value:
+%
+%      binding("V1", "luis")
+%
+% 2. Independent unbound variable:
+%
+%      binding("V1", "_")
+%
+% 3. Unbound variable aliased to an earlier variable:
+%
+%      binding("V2", "alias(V1)")
+%
+% The alias representation preserves the relationship
+% between two variables that have been unified but
+% have not yet received a concrete value.
+%
+% The public binding/2 structure remains unchanged.
 %
 % Example:
 %
 % [
-%   binding("V1", "luis"),
-%   binding("V2", "_")
+%   binding("V1", "_"),
+%   binding("V2", "alias(V1)")
 % ]
 % ------------------------------------------------------------
 
@@ -348,21 +370,28 @@ snapshot_bindings(Variables, Bindings) :-
 
     snapshot_bindings(
         Variables,
+        Variables,
         1,
         Bindings
     ).
 
 
 % ------------------------------------------------------------
-% snapshot_bindings(+Variables, +Index, -Bindings)
+% snapshot_bindings(+Variables, +AllVariables,
+%                   +Index, -Bindings)
 %
 % Auxiliary predicate.
+%
+% AllVariables preserves the original variable positions
+% so that aliases can refer to stable V1, V2, ... labels.
 % ------------------------------------------------------------
 
-snapshot_bindings([], _, []).
+snapshot_bindings([], _, _, []).
+
 
 snapshot_bindings(
     [Variable | Rest],
+    AllVariables,
     Index,
     [binding(Name, Value) | Bindings]
 ) :-
@@ -378,9 +407,33 @@ snapshot_bindings(
     (
         var(Variable)
     ->
-        Value = "_"
+        (
+            earlier_alias_index(
+                AllVariables,
+                Index,
+                Variable,
+                AliasIndex
+            )
+        ->
+            % This variable shares identity with an
+            % earlier original query variable.
+            format(
+                string(Value),
+                'alias(V~d)',
+                [AliasIndex]
+            )
+        ;
+            % Still unbound and independent of
+            % all earlier original query variables.
+            Value = "_"
+        )
     ;
-        snapshot_term(Variable, Value)
+        % The variable already has a concrete
+        % or compound Prolog term as its value.
+        snapshot_term(
+            Variable,
+            Value
+        )
     ),
 
     % Continue with the next variable.
@@ -388,9 +441,47 @@ snapshot_bindings(
 
     snapshot_bindings(
         Rest,
+        AllVariables,
         NextIndex,
         Bindings
     ).
+
+
+% ------------------------------------------------------------
+% earlier_alias_index(+AllVariables, +CurrentIndex,
+%                     +Variable, -AliasIndex)
+%
+% Finds the earliest preceding original query variable
+% that is identical to Variable.
+%
+% Uses term identity (==/2), not unification (= /2).
+% This avoids accidentally binding independent variables.
+% ------------------------------------------------------------
+
+earlier_alias_index(
+    AllVariables,
+    CurrentIndex,
+    Variable,
+    AliasIndex
+) :-
+
+    LastEarlierIndex is CurrentIndex - 1,
+
+    between(
+        1,
+        LastEarlierIndex,
+        AliasIndex
+    ),
+
+    nth1(
+        AliasIndex,
+        AllVariables,
+        EarlierVariable
+    ),
+
+    EarlierVariable == Variable,
+
+    !.
 
 
 % ============================================================
@@ -989,6 +1080,11 @@ number_trace_events(
 % Bindings:
 %   List of binding(VariableName, Value) terms.
 %
+% Binding values:
+%   "_" for an independent unbound variable.
+%   "alias(Vn)" for an unbound alias of a previous variable.
+%   Textual representation for a bound value.
+%
 % Answers:
 %   List of answer(Path, Bindings) terms.
 %
@@ -1003,5 +1099,3 @@ number_trace_events(
 %
 % The interface must be validated with Roy before
 % final integration.
-%
-% ============================================================

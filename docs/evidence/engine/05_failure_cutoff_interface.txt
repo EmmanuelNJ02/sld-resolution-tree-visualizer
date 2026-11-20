@@ -1,0 +1,8 @@
+
+=== LOGICAL FAILURE EVENT ===
+step(2,[],0,failure,"parent(diego,A)",none,["parent(diego,A)"],[binding("V1","_")])
+
+=== DEPTH CUTOFF EVENT ===
+step(5,[1,1,1],3,cutoff,"endless",none,["endless"],[])
+
+RESULT: PASSED

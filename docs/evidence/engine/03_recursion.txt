@@ -1,0 +1,257 @@
+
+======================================================================
+  SLD RESOLUTION ENGINE - PART A
+======================================================================
+
+  CASE 9: Recursive ancestor resolution
+
+  Query          : ancestor(ana,A)
+  Maximum depth  : 4
+  Expected       : 4 solution(s)
+  Actual         : 4 solution(s)
+
+======================================================================
+  RESOLUTION TRACE
+======================================================================
+
+  Total recorded events: 26
+
+  STEP 1 | start
+  --------------------------------------------------------------------
+  Path           : []
+  Depth          : 0
+  Selected goal  : ancestor(ana,A)
+  Bindings       : V1=_
+
+  STEP 2 | apply
+  --------------------------------------------------------------------
+  Path           : [1]
+  Depth          : 1
+  Selected goal  : ancestor(ana,A)
+  Applied clause : ancestor(ana,A):-parent(ana,A)
+  Remaining goals: [parent(ana,A)]
+  Bindings       : V1=_
+
+  STEP 3 | apply
+  --------------------------------------------------------------------
+  Path           : [1,1]
+  Depth          : 2
+  Selected goal  : parent(ana,A)
+  Applied clause : parent(ana,luis)
+  Remaining goals: []
+  Bindings       : V1=luis
+
+  STEP 4 | success
+  --------------------------------------------------------------------
+  Path           : [1,1]
+  Depth          : 2
+  Selected goal  : none
+  Bindings       : V1=luis
+
+  STEP 5 | backtrack
+  --------------------------------------------------------------------
+  Path           : [1]
+  Depth          : 1
+  Selected goal  : parent(ana,A)
+  Bindings       : V1=_
+
+  STEP 6 | apply
+  --------------------------------------------------------------------
+  Path           : [1,2]
+  Depth          : 2
+  Selected goal  : parent(ana,A)
+  Applied clause : parent(ana,marta)
+  Remaining goals: []
+  Bindings       : V1=marta
+
+  STEP 7 | success
+  --------------------------------------------------------------------
+  Path           : [1,2]
+  Depth          : 2
+  Selected goal  : none
+  Bindings       : V1=marta
+
+  STEP 8 | backtrack
+  --------------------------------------------------------------------
+  Path           : []
+  Depth          : 0
+  Selected goal  : ancestor(ana,A)
+  Bindings       : V1=_
+
+  STEP 9 | apply
+  --------------------------------------------------------------------
+  Path           : [2]
+  Depth          : 1
+  Selected goal  : ancestor(ana,A)
+  Applied clause : ancestor(ana,A):-parent(ana,B),ancestor(B,A)
+  Remaining goals: [parent(ana,A),ancestor(A,B)]
+  Bindings       : V1=_
+
+  STEP 10 | apply
+  --------------------------------------------------------------------
+  Path           : [2,1]
+  Depth          : 2
+  Selected goal  : parent(ana,A)
+  Applied clause : parent(ana,luis)
+  Remaining goals: [ancestor(luis,A)]
+  Bindings       : V1=_
+
+  STEP 11 | apply
+  --------------------------------------------------------------------
+  Path           : [2,1,1]
+  Depth          : 3
+  Selected goal  : ancestor(luis,A)
+  Applied clause : ancestor(luis,A):-parent(luis,A)
+  Remaining goals: [parent(luis,A)]
+  Bindings       : V1=_
+
+  STEP 12 | apply
+  --------------------------------------------------------------------
+  Path           : [2,1,1,1]
+  Depth          : 4
+  Selected goal  : parent(luis,A)
+  Applied clause : parent(luis,sofia)
+  Remaining goals: []
+  Bindings       : V1=sofia
+
+  STEP 13 | success
+  --------------------------------------------------------------------
+  Path           : [2,1,1,1]
+  Depth          : 4
+  Selected goal  : none
+  Bindings       : V1=sofia
+
+  STEP 14 | backtrack
+  --------------------------------------------------------------------
+  Path           : [2,1]
+  Depth          : 2
+  Selected goal  : ancestor(luis,A)
+  Bindings       : V1=_
+
+  STEP 15 | apply
+  --------------------------------------------------------------------
+  Path           : [2,1,2]
+  Depth          : 3
+  Selected goal  : ancestor(luis,A)
+  Applied clause : ancestor(luis,A):-parent(luis,B),ancestor(B,A)
+  Remaining goals: [parent(luis,A),ancestor(A,B)]
+  Bindings       : V1=_
+
+  STEP 16 | apply
+  --------------------------------------------------------------------
+  Path           : [2,1,2,1]
+  Depth          : 4
+  Selected goal  : parent(luis,A)
+  Applied clause : parent(luis,sofia)
+  Remaining goals: [ancestor(sofia,A)]
+  Bindings       : V1=_
+
+  STEP 17 | cutoff
+  --------------------------------------------------------------------
+  Path           : [2,1,2,1]
+  Depth          : 4
+  Selected goal  : ancestor(sofia,A)
+  Pending goals  : [ancestor(sofia,A)]
+  Bindings       : V1=_
+
+  STEP 18 | backtrack
+  --------------------------------------------------------------------
+  Path           : [2]
+  Depth          : 1
+  Selected goal  : parent(ana,A)
+  Bindings       : V1=_
+
+  STEP 19 | apply
+  --------------------------------------------------------------------
+  Path           : [2,2]
+  Depth          : 2
+  Selected goal  : parent(ana,A)
+  Applied clause : parent(ana,marta)
+  Remaining goals: [ancestor(marta,A)]
+  Bindings       : V1=_
+
+  STEP 20 | apply
+  --------------------------------------------------------------------
+  Path           : [2,2,1]
+  Depth          : 3
+  Selected goal  : ancestor(marta,A)
+  Applied clause : ancestor(marta,A):-parent(marta,A)
+  Remaining goals: [parent(marta,A)]
+  Bindings       : V1=_
+
+  STEP 21 | apply
+  --------------------------------------------------------------------
+  Path           : [2,2,1,1]
+  Depth          : 4
+  Selected goal  : parent(marta,A)
+  Applied clause : parent(marta,diego)
+  Remaining goals: []
+  Bindings       : V1=diego
+
+  STEP 22 | success
+  --------------------------------------------------------------------
+  Path           : [2,2,1,1]
+  Depth          : 4
+  Selected goal  : none
+  Bindings       : V1=diego
+
+  STEP 23 | backtrack
+  --------------------------------------------------------------------
+  Path           : [2,2]
+  Depth          : 2
+  Selected goal  : ancestor(marta,A)
+  Bindings       : V1=_
+
+  STEP 24 | apply
+  --------------------------------------------------------------------
+  Path           : [2,2,2]
+  Depth          : 3
+  Selected goal  : ancestor(marta,A)
+  Applied clause : ancestor(marta,A):-parent(marta,B),ancestor(B,A)
+  Remaining goals: [parent(marta,A),ancestor(A,B)]
+  Bindings       : V1=_
+
+  STEP 25 | apply
+  --------------------------------------------------------------------
+  Path           : [2,2,2,1]
+  Depth          : 4
+  Selected goal  : parent(marta,A)
+  Applied clause : parent(marta,diego)
+  Remaining goals: [ancestor(diego,A)]
+  Bindings       : V1=_
+
+  STEP 26 | cutoff
+  --------------------------------------------------------------------
+  Path           : [2,2,2,1]
+  Depth          : 4
+  Selected goal  : ancestor(diego,A)
+  Pending goals  : [ancestor(diego,A)]
+  Bindings       : V1=_
+
+======================================================================
+  SUCCESSFUL ANSWERS
+======================================================================
+
+ No. | Path           | Variable bindings
+-----+----------------+------------------------------------------
+ 1   | [1,1]          | V1=luis
+ 2   | [1,2]          | V1=marta
+ 3   | [2,1,1,1]      | V1=sofia
+ 4   | [2,2,1,1]      | V1=diego
+
+======================================================================
+  EXECUTION SUMMARY
+======================================================================
+
+  Recorded steps       : 26
+  Successful answers   : 4
+  Successful branches  : 4
+  Failed branches      : 0
+  Depth cutoffs        : 2
+  Backtracking events  : 5
+
+======================================================================
+  FINAL RESULT
+======================================================================
+
+  RESULT: PASSED

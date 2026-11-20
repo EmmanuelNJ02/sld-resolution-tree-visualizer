@@ -1,0 +1,7 @@
+
+=== PART A: META-INTERPRETER ===
+
+Facts - parent/2   : [luis,marta]
+Rules - ancestor/2 : [luis,marta,sofia,diego]
+
+RESULT: PASSED

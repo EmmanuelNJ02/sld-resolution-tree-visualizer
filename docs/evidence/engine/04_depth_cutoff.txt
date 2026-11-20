@@ -1,0 +1,84 @@
+
+======================================================================
+  SLD RESOLUTION ENGINE - PART A
+======================================================================
+
+  CASE 11: Infinite recursion stopped by depth limit
+
+  Query          : endless
+  Maximum depth  : 3
+  Expected       : 0 solution(s)
+  Actual         : 0 solution(s)
+
+======================================================================
+  RESOLUTION TRACE
+======================================================================
+
+  Total recorded events: 5
+
+  STEP 1 | start
+  --------------------------------------------------------------------
+  Path           : []
+  Depth          : 0
+  Selected goal  : endless
+  Bindings       : -
+
+  STEP 2 | apply
+  --------------------------------------------------------------------
+  Path           : [1]
+  Depth          : 1
+  Selected goal  : endless
+  Applied clause : endless:-endless
+  Remaining goals: [endless]
+  Bindings       : -
+
+  STEP 3 | apply
+  --------------------------------------------------------------------
+  Path           : [1,1]
+  Depth          : 2
+  Selected goal  : endless
+  Applied clause : endless:-endless
+  Remaining goals: [endless]
+  Bindings       : -
+
+  STEP 4 | apply
+  --------------------------------------------------------------------
+  Path           : [1,1,1]
+  Depth          : 3
+  Selected goal  : endless
+  Applied clause : endless:-endless
+  Remaining goals: [endless]
+  Bindings       : -
+
+  STEP 5 | cutoff
+  --------------------------------------------------------------------
+  Path           : [1,1,1]
+  Depth          : 3
+  Selected goal  : endless
+  Pending goals  : [endless]
+  Bindings       : -
+
+======================================================================
+  SUCCESSFUL ANSWERS
+======================================================================
+
+  No successful answers were found.
+  Review the resolution trace to distinguish
+  logical failure from depth cutoff.
+
+======================================================================
+  EXECUTION SUMMARY
+======================================================================
+
+  Recorded steps       : 5
+  Successful answers   : 0
+  Successful branches  : 0
+  Failed branches      : 0
+  Depth cutoffs        : 1
+  Backtracking events  : 0
+
+======================================================================
+  FINAL RESULT
+======================================================================
+
+  RESULT: PASSED
