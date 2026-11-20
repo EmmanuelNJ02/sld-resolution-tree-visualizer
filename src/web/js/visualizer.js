@@ -1,381 +1,396 @@
 "use strict";
 
-const fileInput = document.querySelector("#json-file");
-const loadMessage = document.querySelector("#load-message");
-const treeSection = document.querySelector("#tree-section");
-const treeTitle = document.querySelector("#tree-title");
-const treeSummary = document.querySelector("#tree-summary");
-const treeRoot = document.querySelector("#tree-root");
-const treeCanvas = document.querySelector("#tree-canvas");
-const treeConnections = document.querySelector("#tree-connections");
-const nodeDetails = document.querySelector("#node-details");
+const dom = Object.freeze({
+  fileInput: document.querySelector("#json-file"),
+  loadMessage: document.querySelector("#load-message"),
+  treeSection: document.querySelector("#tree-section"),
+  treeTitle: document.querySelector("#tree-title"),
+  treeSummary: document.querySelector("#tree-summary"),
+  treeRoot: document.querySelector("#tree-root"),
+  treeCanvas: document.querySelector("#tree-canvas"),
+  treeConnections: document.querySelector("#tree-connections"),
+  nodeDetails: document.querySelector("#node-details")
+});
 
-const nodeWidth = 290;
-const horizontalGap = 32;
-const verticalGap = 48;
+const medidas = Object.freeze({
+  anchoNodo: 290,
+  espacioHorizontal: 32,
+  espacioVertical: 48
+});
+
 const svgNamespace = "http://www.w3.org/2000/svg";
 
-const statusLabels = {
+const etiquetasEstado = Object.freeze({
   success: "Éxito",
   failure: "Fallo",
   cutoff: "Límite alcanzado"
-};
-
-fileInput.addEventListener("change", async () => {
-  const file = fileInput.files && fileInput.files[0];
-  if (!file) return;
-
-  try {
-    const data = JSON.parse(await file.text());
-    renderTree(data);
-    setMessage(`Archivo cargado: ${file.name}`);
-  } catch (error) {
-    setMessage(error instanceof SyntaxError
-      ? "No se pudo leer el archivo: el contenido no es JSON válido."
-      : error.message, true);
-  } finally {
-    fileInput.value = "";
-  }
 });
 
-function setMessage(message, isError = false) {
-  loadMessage.textContent = message;
-  loadMessage.dataset.kind = isError ? "error" : "info";
-}
+const pipe = (...fns) => entrada => fns.reduce((valor, fn) => fn(valor), entrada);
 
-function validateTree(data) {
-  if (!data || typeof data !== "object" || Array.isArray(data)) {
-    throw new Error("El archivo debe contener un objeto JSON.");
+const range = n => Array.from({ length: n }, (_, i) => i);
+
+const maximo = valores => valores.reduce((max, v) => Math.max(max, v), -Infinity);
+
+const esTexto = valor => typeof valor === "string";
+const esEnteroNoNegativo = valor => Number.isInteger(valor) && valor >= 0;
+
+const nuloO = pred => valor => valor === null || pred(valor);
+const listaDe = pred => valor => Array.isArray(valor) && valor.every(pred);
+
+const esBinding = binding =>
+  Boolean(binding) && esTexto(binding.var) && esTexto(binding.value);
+
+const esEstado = estado => Object.prototype.hasOwnProperty.call(etiquetasEstado, estado);
+
+const textoBinding = binding => `${binding.var} = ${binding.value}`;
+
+const Ok = value => Object.freeze({ isOk: true, value });
+const Err = error => Object.freeze({ isOk: false, error });
+
+const chain = fn => resultado => (resultado.isOk ? fn(resultado.value) : resultado);
+
+const verificar = (pred, mensaje) => valor =>
+  (pred(valor) ? Ok(valor) : Err(mensaje));
+
+const primerError = (mensajes, valor) =>
+  (mensajes.length > 0 ? Err(mensajes[0]) : Ok(valor));
+
+const esObjeto = data =>
+  Boolean(data) && typeof data === "object" && !Array.isArray(data);
+
+const tieneEncabezado = data =>
+  esTexto(data.query) &&
+  esEnteroNoNegativo(data.maxDepth) &&
+  Array.isArray(data.nodes) && data.nodes.length > 0 &&
+  Array.isArray(data.answers);
+
+const esNodoValido = nodo =>
+  Boolean(nodo) &&
+  esTexto(nodo.id) && nodo.id.length > 0 &&
+  nuloO(esTexto)(nodo.parent) &&
+  esEnteroNoNegativo(nodo.depth) &&
+  esTexto(nodo.goal) &&
+  nuloO(esTexto)(nodo.clause) &&
+  listaDe(esTexto)(nodo.pending) &&
+  listaDe(esBinding)(nodo.bindings) &&
+  esEstado(nodo.status) &&
+  listaDe(esTexto)(nodo.children);
+
+const erroresDeNodo = ids => (nodo, i) =>
+  !esNodoValido(nodo)
+    ? ["Uno o más nodos tienen campos inválidos."]
+    : ids.indexOf(nodo.id) !== i
+      ? [`El identificador de nodo ${nodo.id} está repetido.`]
+      : [];
+
+const verificarNodos = data =>
+  primerError(data.nodes.flatMap(erroresDeNodo(data.nodes.map(nodo => nodo && nodo.id))), data);
+
+const indexarNodos = data =>
+  Ok({ data, nodosPorId: new Map(data.nodes.map(nodo => [nodo.id, nodo])) });
+
+const buscarRaiz = arbol => {
+  const raices = arbol.data.nodes.filter(nodo => nodo.parent === null);
+  return raices.length === 1 && raices[0] === arbol.data.nodes[0]
+    ? Ok({ ...arbol, raiz: raices[0] })
+    : Err("El árbol debe tener una única raíz, ubicada al inicio de nodes.");
+};
+
+const erroresDeEnlace = nodosPorId => nodo => {
+  const padre = nodo.parent === null ? null : nodosPorId.get(nodo.parent);
+  const errorPadre =
+    nodo.parent !== null && (!padre || !padre.children.includes(nodo.id))
+      ? [`La relación padre-hijo de ${nodo.id} no es válida.`]
+      : [];
+  const erroresHijos = nodo.children
+    .filter(idHijo => {
+      const hijo = nodosPorId.get(idHijo);
+      return !hijo || hijo.parent !== nodo.id;
+    })
+    .map(idHijo => `La conexión de ${nodo.id} hacia ${idHijo} no es válida.`);
+  return [...errorPadre, ...erroresHijos];
+};
+
+const verificarEnlaces = arbol =>
+  primerError(arbol.data.nodes.flatMap(erroresDeEnlace(arbol.nodosPorId)), arbol);
+
+const esRespuestaValida = nodosPorId => respuesta => {
+  const nodo = respuesta && nodosPorId.get(respuesta.node);
+  return Boolean(nodo) && nodo.status === "success" && listaDe(esBinding)(respuesta.bindings);
+};
+
+const verificarRespuestas = arbol =>
+  verificar(
+    a => a.data.answers.every(esRespuestaValida(a.nodosPorId)),
+    "Una respuesta apunta a un nodo inexistente o no exitoso."
+  )(arbol);
+
+const visitar = nodosPorId => (id, visitados) =>
+  visitados.includes(id)
+    ? Err("El árbol contiene una conexión circular.")
+    : nodosPorId.get(id).children.reduce(
+        (resultado, idHijo) => chain(vistos => visitar(nodosPorId)(idHijo, vistos))(resultado),
+        Ok([...visitados, id])
+      );
+
+const verificarAlcanzables = arbol =>
+  chain(visitados => (visitados.length === arbol.data.nodes.length
+    ? Ok(arbol)
+    : Err("Hay nodos que no pertenecen a la raíz del árbol.")))(visitar(arbol.nodosPorId)(arbol.raiz.id, []));
+
+const validarArbol = data =>
+  pipe(
+    chain(verificar(esObjeto, "El archivo debe contener un objeto JSON.")),
+    chain(verificar(tieneEncabezado, "El JSON no cumple el formato de árbol SLD esperado.")),
+    chain(verificarNodos),
+    chain(indexarNodos),
+    chain(buscarRaiz),
+    chain(verificarEnlaces),
+    chain(verificarRespuestas),
+    chain(verificarAlcanzables)
+  )(Ok(data));
+
+const ubicarNodo = nodosPorId => (nodo, siguienteHoja) => {
+  if (nodo.children.length === 0) {
+    const centro = medidas.anchoNodo / 2 + siguienteHoja * (medidas.anchoNodo + medidas.espacioHorizontal);
+    return { centro, siguienteHoja: siguienteHoja + 1, pares: [[nodo.id, centro]] };
   }
-  if (typeof data.query !== "string" || !Number.isInteger(data.maxDepth) || data.maxDepth < 0 ||
-      !Array.isArray(data.nodes) || data.nodes.length === 0 || !Array.isArray(data.answers)) {
-    throw new Error("El JSON no cumple el formato de árbol SLD esperado.");
-  }
 
-  const nodesById = new Map();
-  for (const node of data.nodes) {
-    if (!node || typeof node.id !== "string" || node.id.length === 0 ||
-        (node.parent !== null && typeof node.parent !== "string") ||
-        !Number.isInteger(node.depth) || node.depth < 0 ||
-        typeof node.goal !== "string" ||
-        (node.clause !== null && typeof node.clause !== "string") ||
-        !Array.isArray(node.pending) || !node.pending.every(value => typeof value === "string") ||
-        !Array.isArray(node.bindings) ||
-        !node.bindings.every(binding => binding && typeof binding.var === "string" &&
-          typeof binding.value === "string") ||
-        !Object.prototype.hasOwnProperty.call(statusLabels, node.status) ||
-        !Array.isArray(node.children) || !node.children.every(id => typeof id === "string")) {
-      throw new Error("Uno o más nodos tienen campos inválidos.");
-    }
-    if (nodesById.has(node.id)) throw new Error(`El identificador de nodo ${node.id} está repetido.`);
-    nodesById.set(node.id, node);
-  }
-
-  const roots = data.nodes.filter(node => node.parent === null);
-  if (roots.length !== 1 || roots[0] !== data.nodes[0]) {
-    throw new Error("El árbol debe tener una única raíz, ubicada al inicio de nodes.");
-  }
-
-  for (const node of data.nodes) {
-    if (node.parent !== null) {
-      const parent = nodesById.get(node.parent);
-      if (!parent || !parent.children.includes(node.id)) {
-        throw new Error(`La relación padre-hijo de ${node.id} no es válida.`);
-      }
-    }
-    for (const childId of node.children) {
-      const child = nodesById.get(childId);
-      if (!child || child.parent !== node.id) {
-        throw new Error(`La conexión de ${node.id} hacia ${childId} no es válida.`);
-      }
-    }
-  }
-
-  for (const answer of data.answers) {
-    const node = answer && nodesById.get(answer.node);
-    if (!node || node.status !== "success" || !Array.isArray(answer.bindings) ||
-        !answer.bindings.every(binding => binding && typeof binding.var === "string" &&
-          typeof binding.value === "string")) {
-      throw new Error("Una respuesta apunta a un nodo inexistente o no exitoso.");
-    }
-  }
-
-  const visited = new Set();
-  function visit(node) {
-    if (visited.has(node.id)) throw new Error("El árbol contiene una conexión circular.");
-    visited.add(node.id);
-    for (const childId of node.children) visit(nodesById.get(childId));
-  }
-  visit(roots[0]);
-  if (visited.size !== data.nodes.length) {
-    throw new Error("Hay nodos que no pertenecen a la raíz del árbol.");
-  }
-
-  return { root: roots[0], nodesById };
-}
-
-function renderTree(data) {
-  const { root, nodesById } = validateTree(data);
-  const answerIds = new Set(data.answers.map(answer => answer.node));
-
-  treeSection.hidden = false;
-  treeTitle.textContent = data.query;
-  treeSummary.replaceChildren(
-    summaryItem("Profundidad máxima", data.maxDepth),
-    summaryItem("Nodos", data.nodes.length),
-    summaryItem("Soluciones", data.answers.length)
+  const hijos = nodo.children.reduce(
+    (acc, idHijo) => {
+      const ubicado = ubicarNodo(nodosPorId)(nodosPorId.get(idHijo), acc.siguienteHoja);
+      return {
+        siguienteHoja: ubicado.siguienteHoja,
+        centros: [...acc.centros, ubicado.centro],
+        pares: [...acc.pares, ...ubicado.pares]
+      };
+    },
+    { siguienteHoja, centros: [], pares: [] }
   );
-  const positions = calculateNodePositions(root, nodesById);
-  const width = Math.max(
-    positions.width,
-    treeViewportWidth()
-  );
-  const horizontalOffset = (width - positions.width) / 2;
-  treeCanvas.style.width = `${width}px`;
-  treeCanvas.style.height = "1px";
-  treeConnections.replaceChildren();
 
-  const elements = new Map();
-  const fragment = document.createDocumentFragment();
-  for (const node of data.nodes) {
-    const item = createNodeElement(node, answerIds);
-    item.style.left = `${horizontalOffset + positions.centers.get(node.id) - nodeWidth / 2}px`;
+  const centro = (hijos.centros[0] + hijos.centros[hijos.centros.length - 1]) / 2;
+  return { centro, siguienteHoja: hijos.siguienteHoja, pares: [...hijos.pares, [nodo.id, centro]] };
+};
+
+const calcularPosiciones = (raiz, nodosPorId) => {
+  const { siguienteHoja, pares } = ubicarNodo(nodosPorId)(raiz, 0);
+  const ancho = Math.max(
+    medidas.anchoNodo,
+    siguienteHoja * medidas.anchoNodo + (siguienteHoja - 1) * medidas.espacioHorizontal
+  );
+  return { centros: new Map(pares), ancho };
+};
+
+const alturasPorNivel = (mediciones, nivelMaximo) =>
+  range(nivelMaximo + 1).map(nivel =>
+    maximo(mediciones.filter(m => m.nivel === nivel).map(m => m.alto)));
+
+const topesPorNivel = alturas =>
+  alturas.slice(1).reduce(
+    (topes, _, i) => [...topes, topes[i] + alturas[i] + medidas.espacioVertical],
+    [0]
+  );
+
+const segmentosDeConexion = ({ centroPadre, basePadre, topeHijos, centrosHijos }) => {
+  const yRama = basePadre + (topeHijos - basePadre) / 2;
+  const barra = centrosHijos.length > 1
+    ? [[Math.min(...centrosHijos), yRama, Math.max(...centrosHijos), yRama]]
+    : [];
+  return [
+    [centroPadre, basePadre, centroPadre, yRama],
+    ...barra,
+    ...centrosHijos.map(c => [c, yRama, c, topeHijos])
+  ];
+};
+
+const el = (tag, { className, text, attrs = {}, dataset = {}, on = {} } = {}, hijos = []) => {
+  const elemento = document.createElement(tag);
+  if (className) elemento.className = className;
+  if (text !== undefined) elemento.textContent = String(text);
+  Object.entries(dataset).forEach(([clave, valor]) => { elemento.dataset[clave] = valor; });
+  Object.entries(attrs).forEach(([clave, valor]) => elemento.setAttribute(clave, valor));
+  Object.entries(on).forEach(([evento, manejador]) => elemento.addEventListener(evento, manejador));
+  elemento.append(...hijos);
+  return elemento;
+};
+
+const lineaSvg = ([x1, y1, x2, y2]) => {
+  const linea = document.createElementNS(svgNamespace, "line");
+  [["x1", x1], ["y1", y1], ["x2", x2], ["y2", y2], ["class", "tree-connection"]]
+    .forEach(([nombre, valor]) => linea.setAttribute(nombre, String(valor)));
+  return linea;
+};
+
+const itemResumen = (etiqueta, valor) =>
+  el("span", { className: "summary-item" }, [
+    document.createTextNode(`${etiqueta}: `),
+    el("strong", { text: valor })
+  ]);
+
+const etiquetaCampo = etiqueta => el("span", { className: "node-field__label", text: etiqueta });
+
+const campoNodo = (etiqueta, valor) =>
+  el("div", { className: "node-field" }, [etiquetaCampo(etiqueta), el("code", { text: valor })]);
+
+const listaNodo = (etiqueta, valores) =>
+  el("div", { className: "node-field" }, [
+    etiquetaCampo(etiqueta),
+    el("ul", {}, valores.map(valor => el("li", { text: valor })))
+  ]);
+
+const campoBindings = bindings =>
+  el("div", { className: "node-field" }, [
+    etiquetaCampo("Sustituciones"),
+    ...bindings.map(binding => el("span", { className: "binding-chip", text: textoBinding(binding) }))
+  ]);
+
+const si = (condicion, construir) => (condicion ? [construir()] : []);
+
+const tarjetaNodo = (nodo, esSolucion, alSeleccionar) =>
+  el("article", { className: `node-card status-${nodo.status}`, dataset: { nodeId: nodo.id } }, [
+    el("div", { className: "node-card__header" }, [
+      el("button", {
+        className: "node-select",
+        text: nodo.id,
+        attrs: { type: "button", "aria-label": `Ver detalle del nodo ${nodo.id}` },
+        on: { click: () => alSeleccionar(nodo) }
+      }),
+      el("span", { className: "node-depth", text: `Profundidad ${nodo.depth}` })
+    ]),
+    el("span", { className: "status-label", text: etiquetasEstado[nodo.status] }),
+    ...si(esSolucion, () => el("span", { className: "answer-mark", text: "Solución" })),
+    campoNodo("Meta evaluada", nodo.goal),
+    ...si(nodo.clause !== null, () => campoNodo("Cláusula aplicada", nodo.clause)),
+    ...si(nodo.pending.length > 0, () => listaNodo("Metas pendientes", nodo.pending)),
+    ...si(nodo.bindings.length > 0, () => campoBindings(nodo.bindings))
+  ]);
+
+const itemNodo = (nodo, esSolucion, alSeleccionar) =>
+  el("li", { className: "tree-node", dataset: { depth: String(nodo.depth) } },
+    [tarjetaNodo(nodo, esSolucion, alSeleccionar)]);
+
+const itemDetalle = (etiqueta, valor) =>
+  el("div", { className: "detail-item" }, [el("dt", { text: etiqueta }), el("dd", { text: valor })]);
+
+const listaDetalle = (etiqueta, valores) =>
+  el("div", { className: "detail-item" }, [
+    el("dt", { text: etiqueta }),
+    valores.length === 0
+      ? el("dd", { text: "Ninguna" })
+      : el("dd", {}, [el("ul", {}, valores.map(valor => el("li", { text: valor })))])
+  ]);
+
+const contenidoDetalle = nodo => [
+  el("h2", { text: `Detalle del nodo ${nodo.id}`, attrs: { id: "details-title" } }),
+  el("dl", { className: "detail-grid" }, [
+    itemDetalle("Estado", etiquetasEstado[nodo.status]),
+    itemDetalle("Profundidad", nodo.depth),
+    itemDetalle("Padre", nodo.parent === null ? "Raíz" : nodo.parent),
+    itemDetalle("Meta evaluada", nodo.goal),
+    itemDetalle("Cláusula aplicada", nodo.clause === null ? "Ninguna (nodo raíz)" : nodo.clause),
+    listaDetalle("Metas pendientes", nodo.pending),
+    listaDetalle("Sustituciones", nodo.bindings.map(textoBinding)),
+    listaDetalle("Hijos", nodo.children.length > 0 ? nodo.children : ["Ninguno"])
+  ])
+];
+
+const mostrarMensaje = (mensaje, esError = false) => {
+  dom.loadMessage.textContent = mensaje;
+  dom.loadMessage.dataset.kind = esError ? "error" : "info";
+};
+
+const mostrarDetalle = nodo => {
+  dom.treeRoot.querySelectorAll(".node-card").forEach(tarjeta => {
+    const seleccionada = tarjeta.dataset.nodeId === nodo.id;
+    tarjeta.classList.toggle("is-selected", seleccionada);
+    tarjeta.querySelector(".node-select").setAttribute("aria-pressed", String(seleccionada));
+  });
+  dom.nodeDetails.replaceChildren(...contenidoDetalle(nodo));
+};
+
+const anchoVisible = () => {
+  const margen = window.matchMedia("(max-width: 720px)").matches ? 16 : 48;
+  return Math.max(medidas.anchoNodo, dom.treeCanvas.parentElement.clientWidth - margen);
+};
+
+const altoTarjeta = item => item.querySelector(".node-card").getBoundingClientRect().height;
+
+const dibujarArbol = ({ data, nodosPorId, raiz }) => {
+  dom.treeSection.hidden = false;
+
+  const idsSolucion = new Set(data.answers.map(respuesta => respuesta.node));
+  const posiciones = calcularPosiciones(raiz, nodosPorId);
+  const ancho = Math.max(posiciones.ancho, anchoVisible());
+  const desplazamiento = (ancho - posiciones.ancho) / 2;
+  const centroDe = id => desplazamiento + posiciones.centros.get(id);
+
+  dom.treeTitle.textContent = data.query;
+  dom.treeSummary.replaceChildren(
+    itemResumen("Profundidad máxima", data.maxDepth),
+    itemResumen("Nodos", data.nodes.length),
+    itemResumen("Soluciones", data.answers.length)
+  );
+  dom.treeCanvas.style.width = `${ancho}px`;
+  dom.treeCanvas.style.height = "1px";
+  dom.treeConnections.replaceChildren();
+
+  const items = new Map(data.nodes.map(nodo => {
+    const item = itemNodo(nodo, idsSolucion.has(nodo.id), mostrarDetalle);
+    item.style.left = `${centroDe(nodo.id) - medidas.anchoNodo / 2}px`;
     item.style.top = "0";
-    elements.set(node.id, item);
-    fragment.append(item);
-  }
-  treeRoot.replaceChildren(fragment);
+    return [nodo.id, item];
+  }));
+  dom.treeRoot.replaceChildren(...items.values());
 
-  const heightsByDepth = new Map();
-  for (const [id, item] of elements) {
-    const depth = nodesById.get(id).depth;
-    const height = item.querySelector(".node-card").getBoundingClientRect().height;
-    heightsByDepth.set(depth, Math.max(heightsByDepth.get(depth) || 0, height));
-  }
+  const nivelMaximo = maximo(data.nodes.map(nodo => nodo.depth));
+  const alturas = alturasPorNivel(
+    data.nodes.map(nodo => ({ nivel: nodo.depth, alto: altoTarjeta(items.get(nodo.id)) })),
+    nivelMaximo
+  );
+  const topes = topesPorNivel(alturas);
+  const alto = topes[nivelMaximo] + alturas[nivelMaximo];
 
-  const maxDepth = Math.max(...data.nodes.map(node => node.depth));
-  const topsByDepth = new Map([[0, 0]]);
-  for (let depth = 1; depth <= maxDepth; depth += 1) {
-    topsByDepth.set(depth, topsByDepth.get(depth - 1) +
-      heightsByDepth.get(depth - 1) + verticalGap);
-  }
+  data.nodes.forEach(nodo => { items.get(nodo.id).style.top = `${topes[nodo.depth]}px`; });
+  dom.treeCanvas.style.height = `${alto}px`;
+  dom.treeConnections.setAttribute("width", String(ancho));
+  dom.treeConnections.setAttribute("height", String(alto));
+  dom.treeConnections.setAttribute("viewBox", `0 0 ${ancho} ${alto}`);
 
-  for (const node of data.nodes) {
-    elements.get(node.id).style.top = `${topsByDepth.get(node.depth)}px`;
-  }
+  const segmentos = data.nodes
+    .filter(nodo => nodo.children.length > 0)
+    .flatMap(nodo => segmentosDeConexion({
+      centroPadre: centroDe(nodo.id),
+      basePadre: topes[nodo.depth] + altoTarjeta(items.get(nodo.id)),
+      topeHijos: topes[nodo.depth + 1],
+      centrosHijos: nodo.children.map(centroDe)
+    }));
+  dom.treeConnections.replaceChildren(...segmentos.map(lineaSvg));
 
-  const height = topsByDepth.get(maxDepth) + heightsByDepth.get(maxDepth);
-  treeCanvas.style.height = `${height}px`;
-  treeConnections.setAttribute("width", String(width));
-  treeConnections.setAttribute("height", String(height));
-  treeConnections.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  mostrarDetalle(raiz);
+};
 
-  for (const node of data.nodes) {
-    if (node.children.length === 0) continue;
-    const parentCenter = horizontalOffset + positions.centers.get(node.id);
-    const parentBottom = topsByDepth.get(node.depth) + elements.get(node.id)
-      .querySelector(".node-card").getBoundingClientRect().height;
-    const childTop = topsByDepth.get(node.depth + 1);
-    const branchY = parentBottom + (childTop - parentBottom) / 2;
-    const childCenters = node.children.map(id =>
-      horizontalOffset + positions.centers.get(id));
+const mensajeDeError = error =>
+  (error instanceof SyntaxError
+    ? "No se pudo leer el archivo: el contenido no es JSON válido."
+    : error.message);
 
-    addConnection(parentCenter, parentBottom, parentCenter, branchY);
-    if (childCenters.length > 1) {
-      addConnection(Math.min(...childCenters), branchY, Math.max(...childCenters), branchY);
-    }
-    for (const childCenter of childCenters) {
-      addConnection(childCenter, branchY, childCenter, childTop);
-    }
-  }
+const extraer = resultado => {
+  if (!resultado.isOk) throw new Error(resultado.error);
+  return resultado.value;
+};
 
-  showNodeDetails(root);
-}
+const cargarArchivo = archivo =>
+  archivo.text()
+    .then(texto => JSON.parse(texto))
+    .then(validarArbol)
+    .then(extraer)
+    .then(dibujarArbol)
+    .then(() => mostrarMensaje(`Archivo cargado: ${archivo.name}`))
+    .catch(error => mostrarMensaje(mensajeDeError(error), true))
+    .finally(() => { dom.fileInput.value = ""; });
 
-function treeViewportWidth() {
-  const padding = window.matchMedia("(max-width: 720px)").matches ? 16 : 48;
-  return Math.max(nodeWidth, treeCanvas.parentElement.clientWidth - padding);
-}
-
-function calculateNodePositions(root, nodesById) {
-  const centers = new Map();
-  let nextLeaf = 0;
-
-  function place(node) {
-    if (node.children.length === 0) {
-      const center = nodeWidth / 2 + nextLeaf * (nodeWidth + horizontalGap);
-      nextLeaf += 1;
-      centers.set(node.id, center);
-      return center;
-    }
-
-    const childCenters = node.children.map(childId => place(nodesById.get(childId)));
-    const center = (childCenters[0] + childCenters[childCenters.length - 1]) / 2;
-    centers.set(node.id, center);
-    return center;
-  }
-
-  place(root);
-  const width = Math.max(nodeWidth, nextLeaf * nodeWidth + (nextLeaf - 1) * horizontalGap);
-  return { centers, width };
-}
-
-function addConnection(x1, y1, x2, y2) {
-  const line = document.createElementNS(svgNamespace, "line");
-  line.setAttribute("x1", String(x1));
-  line.setAttribute("y1", String(y1));
-  line.setAttribute("x2", String(x2));
-  line.setAttribute("y2", String(y2));
-  line.setAttribute("class", "tree-connection");
-  treeConnections.append(line);
-}
-
-function summaryItem(label, value) {
-  const item = document.createElement("span");
-  item.className = "summary-item";
-  const strong = document.createElement("strong");
-  strong.textContent = String(value);
-  item.append(document.createTextNode(`${label}: `), strong);
-  return item;
-}
-
-function createNodeElement(node, answerIds) {
-  const item = document.createElement("li");
-  item.className = "tree-node";
-  item.dataset.depth = String(node.depth);
-  const card = document.createElement("article");
-  card.className = `node-card status-${node.status}`;
-  card.dataset.nodeId = node.id;
-
-  const header = document.createElement("div");
-  header.className = "node-card__header";
-  const selectButton = document.createElement("button");
-  selectButton.className = "node-select";
-  selectButton.type = "button";
-  selectButton.textContent = node.id;
-  selectButton.setAttribute("aria-label", `Ver detalle del nodo ${node.id}`);
-  selectButton.addEventListener("click", () => showNodeDetails(node));
-  const depth = document.createElement("span");
-  depth.className = "node-depth";
-  depth.textContent = `Profundidad ${node.depth}`;
-  header.append(selectButton, depth);
-  card.append(header);
-
-  const status = document.createElement("span");
-  status.className = "status-label";
-  status.textContent = statusLabels[node.status];
-  card.append(status);
-
-  if (answerIds.has(node.id)) {
-    const answerMark = document.createElement("span");
-    answerMark.className = "answer-mark";
-    answerMark.textContent = "Solución";
-    card.append(answerMark);
-  }
-
-  appendNodeField(card, "Meta evaluada", node.goal);
-  if (node.clause !== null) appendNodeField(card, "Cláusula aplicada", node.clause);
-  if (node.pending.length > 0) appendNodeList(card, "Metas pendientes", node.pending);
-  if (node.bindings.length > 0) appendBindings(card, node.bindings);
-  item.append(card);
-  return item;
-}
-
-function appendNodeField(parent, label, value) {
-  const field = document.createElement("div");
-  field.className = "node-field";
-  const fieldLabel = document.createElement("span");
-  fieldLabel.className = "node-field__label";
-  fieldLabel.textContent = label;
-  const content = document.createElement("code");
-  content.textContent = value;
-  field.append(fieldLabel, content);
-  parent.append(field);
-}
-
-function appendNodeList(parent, label, values) {
-  const field = document.createElement("div");
-  field.className = "node-field";
-  const fieldLabel = document.createElement("span");
-  fieldLabel.className = "node-field__label";
-  fieldLabel.textContent = label;
-  const list = document.createElement("ul");
-  for (const value of values) {
-    const item = document.createElement("li");
-    item.textContent = value;
-    list.append(item);
-  }
-  field.append(fieldLabel, list);
-  parent.append(field);
-}
-
-function appendBindings(parent, bindings) {
-  const field = document.createElement("div");
-  field.className = "node-field";
-  const fieldLabel = document.createElement("span");
-  fieldLabel.className = "node-field__label";
-  fieldLabel.textContent = "Sustituciones";
-  field.append(fieldLabel);
-  for (const binding of bindings) {
-    const chip = document.createElement("span");
-    chip.className = "binding-chip";
-    chip.textContent = `${binding.var} = ${binding.value}`;
-    field.append(chip);
-  }
-  parent.append(field);
-}
-
-function showNodeDetails(node) {
-  for (const card of treeRoot.querySelectorAll(".node-card")) {
-    const selected = card.dataset.nodeId === node.id;
-    card.classList.toggle("is-selected", selected);
-    card.querySelector(".node-select").setAttribute("aria-pressed", String(selected));
-  }
-
-  const heading = document.createElement("h2");
-  heading.id = "details-title";
-  heading.textContent = `Detalle del nodo ${node.id}`;
-  const grid = document.createElement("dl");
-  grid.className = "detail-grid";
-  addDetail(grid, "Estado", statusLabels[node.status]);
-  addDetail(grid, "Profundidad", node.depth);
-  addDetail(grid, "Padre", node.parent === null ? "Raíz" : node.parent);
-  addDetail(grid, "Meta evaluada", node.goal);
-  addDetail(grid, "Cláusula aplicada", node.clause === null ? "Ninguna (nodo raíz)" : node.clause);
-  addDetailList(grid, "Metas pendientes", node.pending);
-  addDetailList(grid, "Sustituciones", node.bindings.map(binding => `${binding.var} = ${binding.value}`));
-  addDetailList(grid, "Hijos", node.children.length > 0 ? node.children : ["Ninguno"]);
-  nodeDetails.replaceChildren(heading, grid);
-}
-
-function addDetail(parent, label, value) {
-  const item = document.createElement("div");
-  item.className = "detail-item";
-  const term = document.createElement("dt");
-  term.textContent = label;
-  const description = document.createElement("dd");
-  description.textContent = String(value);
-  item.append(term, description);
-  parent.append(item);
-}
-
-function addDetailList(parent, label, values) {
-  const item = document.createElement("div");
-  item.className = "detail-item";
-  const term = document.createElement("dt");
-  term.textContent = label;
-  const description = document.createElement("dd");
-  if (values.length === 0) {
-    description.textContent = "Ninguna";
-  } else {
-    const list = document.createElement("ul");
-    for (const value of values) {
-      const entry = document.createElement("li");
-      entry.textContent = value;
-      list.append(entry);
-    }
-    description.append(list);
-  }
-  item.append(term, description);
-  parent.append(item);
-}
+dom.fileInput.addEventListener("change", () => {
+  const archivo = dom.fileInput.files && dom.fileInput.files[0];
+  if (archivo) cargarArchivo(archivo);
+});
