@@ -422,3 +422,4 @@ export_tree_json(Query, MaxDepth, File) :-
     open(File, write, Stream, [encoding(utf8)]),
     write_tree_json(Stream, MaxDepth, Nodes, Answers),
     close(Stream).
+
