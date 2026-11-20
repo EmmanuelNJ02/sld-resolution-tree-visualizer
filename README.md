@@ -24,6 +24,8 @@ The complete project is organized into three individually developed components:
 
 The original Part A resolution engine was integrated into `main` through pull request #2, merge commit `d8a1117`.
 
+**Part B status:** Roy's SLD tree construction and JSON-export contribution was implemented and merged into `main` through pull request #3, merge commit `af0a610`. Its technical documentation is available in `docs/TREE_TECHNICAL.md` and `docs/TREE_JSON_FORMAT.md`.
+
 Additional improvements were developed on:
 
 ```text
@@ -55,7 +57,7 @@ The recorded individual verification of this development version completed succe
 
 **Recorded verification date:** November 19, 2026.
 
-The additional evidence-branch changes must be committed, reviewed, and merged separately.
+The additional Part A evidence-branch changes were committed as `458f96c` and pushed to `feature/engine-demo-evidence`. Their pull request still requires review and merging into `main`.
 
 Integration with the actual Part B tree builder and Part C web visualizer has not been established by the recorded Part A evidence.
 
@@ -234,7 +236,9 @@ Part B is responsible for:
 12. Developing independent tests and documentation.
 13. Demonstrating and defending the component.
 
-**Verification status:** Actual integration with Part A has not been established by the available Part A execution evidence.
+**Implementation status:** Part B was merged into `main` in pull request #3 (`af0a610`), including its own tree-construction, JSON-export, and integration-test files.
+
+**Integration status:** The recorded Part A tests alone do not establish compatibility between Roy's merged implementation and the newer Part A evidence-branch changes. The combined tests must be executed before declaring the current two components integrated.
 
 ### 4.3. Part C - Web-Based SLD Tree Visualization
 
@@ -1272,7 +1276,7 @@ A final presentation rehearsal and code-to-documentation consistency review are 
 - [x] Organized console reports implemented.
 - [x] Technical documentation prepared.
 - [ ] Final code-to-documentation consistency review completed.
-- [ ] Additional evidence-branch changes committed.
+- [x] Additional evidence-branch changes committed (`458f96c`).
 - [ ] Additional evidence-branch changes reviewed and merged.
 - [ ] Individual presentation rehearsed.
 - [ ] Actual Part A-B integration verified.
@@ -1354,7 +1358,7 @@ The implementation, tests, technical documentation, and demonstration guide supp
 
 These results do not establish that the complete three-component SLD Resolution Tree Visualizer has already been integrated.
 
-The final project requires the corresponding Part B and Part C implementations and verified integration between them.
+The complete project still requires verified integration of the newer Part A changes with the merged Part B implementation and the corresponding Part C visualization.
 
 The individual responsibility boundaries approved by instructor Carlos Loría-Sáenz must be preserved.
 

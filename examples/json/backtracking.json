@@ -1,0 +1,25 @@
+{
+  "query": "parent(ana,A),parent(A,diego)",
+  "maxDepth": 3,
+  "nodes": [
+    {"id": "n0", "parent": null, "path": [], "depth": 0,
+     "goal": "parent(ana,A),parent(A,diego)", "clause": null,
+     "pending": ["parent(ana,A)", "parent(A,diego)"], "bindings": [{"var": "V1", "value": "_"}],
+     "status": "success", "children": ["n1", "n2"]},
+    {"id": "n1", "parent": "n0", "path": [1], "depth": 1,
+     "goal": "parent(ana,A)", "clause": "parent(ana,luis)",
+     "pending": ["parent(luis,diego)"], "bindings": [{"var": "V1", "value": "luis"}],
+     "status": "failure", "children": []},
+    {"id": "n2", "parent": "n0", "path": [2], "depth": 1,
+     "goal": "parent(ana,A)", "clause": "parent(ana,marta)",
+     "pending": ["parent(marta,diego)"], "bindings": [{"var": "V1", "value": "marta"}],
+     "status": "success", "children": ["n3"]},
+    {"id": "n3", "parent": "n2", "path": [2,1], "depth": 2,
+     "goal": "parent(marta,diego)", "clause": "parent(marta,diego)",
+     "pending": [], "bindings": [{"var": "V1", "value": "marta"}],
+     "status": "success", "children": []}
+  ],
+  "answers": [
+    {"node": "n3", "bindings": [{"var": "V1", "value": "marta"}]}
+  ]
+}
