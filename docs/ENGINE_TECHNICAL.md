@@ -1,127 +1,291 @@
 # Individual Technical Documentation - SLD Resolution Engine
 
-## 1. Project Information
+## 1. Academic and Development Information
 
-- **Project:** SLD Resolution Tree Visualizer
-- **Course:** EIF400 - Programming Paradigms
-- **University:** National University of Costa Rica (UNA)
-- **Group:** 04-10am
-- **Instructor:** Carlos Loria-Saenz
-- **Student:** Emmanuel Nunez Jimenez
-- **Individual Contribution:** Part A - SLD Meta-Interpreter and Logical Resolution Engine in SWI-Prolog
-- **Development Environment:** SWI-Prolog 10.0.2 for Windows (64-bit)
-- **Working Branch:** `feature/sld-meta-interpreter`
-- **Latest Confirmed Commit:** `900033a`
-- **Engine Implementation Reference:** `b0b1033`
+| Field | Details |
+|---|---|
+| Project | SLD Resolution Tree Visualizer |
+| University | National University of Costa Rica (UNA) |
+| School | School of Informatics |
+| Course | EIF400 - Programming Paradigms |
+| Group | 04-10am |
+| Instructor | Carlos Loría-Sáenz |
+| Student | Emmanuel Núñez Jiménez |
+| Individual contribution | Part A - SLD Meta-Interpreter and Logical Resolution Engine |
+| Implementation language | SWI-Prolog |
+| Verified environment | SWI-Prolog 10.0.2, Windows 64-bit |
+| Original engine integration | Pull request #2, merge commit `d8a1117` |
+| Current development branch | `feature/engine-demo-evidence` |
+| Recorded individual verification | November 19, 2026 |
 
-**Current Status:** The SLD resolution engine has been implemented and individually tested. Integration with Part B remains pending validation.
+### 1.1. Verification Summary
 
-## 2. Purpose and Scope
+The Part A SLD meta-interpreter, depth-limited resolution mechanism, and structured resolution tracing have been implemented and individually tested.
 
-The purpose of Part A is to implement an SLD resolution engine capable of processing queries over a defined subset of Prolog.
+The recorded results are:
 
-SLD stands for *Selective Linear Definite Clause Resolution*. It is a logical resolution strategy used to execute queries against definite Horn clauses.
+| Verification | Result |
+|---|---|
+| Basic SLD engine tests | 14/14 passed |
+| Resolution trace tests | 17/17 passed |
+| Variable aliasing tests | 3/3 passed |
+| Structured event contract tests | 7/7 passed |
+| **Total automated tests** | **41/41 passed** |
+| **Demonstration cases** | **12/12 passed** |
+| Automated test exit code | 0 |
+| Demonstration exit code | 0 |
 
-The engine supports:
+The variable-aliasing and structured-event contract tests passed together with the original engine and trace test suites.
 
-- Facts.
-- Definite Horn-clause rules.
-- Logical queries.
-- Conjunctions of goals.
+The current development branch also contains demonstration files, individual execution evidence, and documentation improvements.
+
+These additional changes have not been assumed to be merged into `main`.
+
+The actual integration between Part A and Roy's tree-building component still requires verification using the real Part B implementation.
+
+---
+
+## 2. Purpose of the Individual Contribution
+
+The purpose of Part A is to implement an educational SLD meta-interpreter in SWI-Prolog.
+
+The engine processes logical queries over a defined subset of Prolog consisting primarily of facts and definite Horn-clause rules.
+
+The implementation uses SWI-Prolog's own mechanisms for:
+
+- Clause inspection.
+- Term unification.
+- Logical variable substitutions.
+- Recursive execution.
+- Backtracking.
+
+It also explicitly records relevant information about the resolution process.
+
+This makes it possible for another component to construct a representation of the corresponding SLD resolution tree.
+
+### 2.1. Approved Functional Responsibilities
+
+Emmanuel's approved individual contribution contains six responsibilities:
+
+1. Implement an SLD meta-interpreter in SWI-Prolog.
+2. Resolve goals and perform unification.
+3. Handle recursion and backtracking.
+4. Implement configurable depth control.
+5. Generate resolution information for the tree-building component.
+6. Develop individual automated tests.
+
+These responsibilities define the technical scope of Part A.
+
+### 2.2. Required Deliverables
+
+The approved individual deliverables are:
+
+1. A SWI-Prolog meta-interpreter module.
+2. Predicates required for logical resolution.
+3. Test cases and execution evidence.
+4. A technical explanation of the module's design, operation, and limitations.
+5. An individual demonstration of the engine and the information provided to the tree-building component.
+
+This document supports the fourth deliverable and provides technical background for the fifth.
+
+### 2.3. Responsibility Boundaries
+
+#### Part A - Emmanuel Núñez Jiménez
+
+Responsible for:
+
+- Logical SLD resolution.
+- The meta-interpreter.
+- Goal selection.
+- Clause selection.
 - Unification.
-- Recursive resolution.
+- Variable substitutions.
+- Recursion.
 - Backtracking.
 - Multiple solutions.
 - Failed queries.
-- Configurable resolution depth.
-- Resolution trace generation.
+- Configurable depth limits.
+- Structured resolution events.
+- Automated tests.
+- Execution evidence.
+- Technical documentation.
+- Individual demonstration.
 
-The engine also generates information about the resolution process, allowing another component to construct an SLD resolution tree.
+#### Part B - Roy Arias Mejía
 
-### Individual Responsibility
+Responsible for:
 
-Part A is developed by Emmanuel Nunez Jimenez.
+- Consuming the resolution information produced by Part A.
+- Constructing the SLD tree hierarchy.
+- Creating nodes and branches.
+- Preserving parent-child relationships.
+- Representing branch outcomes.
+- Associating clauses and substitutions with nodes.
+- Exporting the completed SLD tree as JSON.
+- Testing the tree-building component.
 
-Its responsibilities are:
+#### Part C - Keynell Molina Mora
 
-1. Implement the SLD meta-interpreter.
-2. Select and resolve goals.
-3. Apply unification.
-4. Execute facts and rules.
-5. Handle recursion.
-6. Explore alternatives through backtracking.
-7. Produce multiple solutions.
-8. Identify unsuccessful resolution attempts.
-9. Control recursive searches using a depth limit.
-10. Generate resolution events and variable substitutions.
-11. Implement individual tests.
-12. Document and demonstrate the engine.
+Responsible for:
 
-Part A does not construct the final graphical tree or export JSON.
+- Reading the JSON produced by Part B.
+- Implementing the HTML/JavaScript interface.
+- Displaying the SLD tree graphically.
+- Showing nodes and their relationships.
+- Distinguishing branch outcomes.
+- Displaying goals, clauses, and substitutions.
+- Providing information about individual nodes.
+- Testing the graphical visualization.
 
-Those responsibilities belong to Part B, developed by Roy Arias Mejia.
+The console demonstration created for Part A does not replace the tree builder or the web visualizer.
 
-The web visualization component belongs to Part C, developed by Keynell Molina Mora.
+---
 
-## 3. Project Files
+## 3. SLD Resolution Fundamentals
 
-The main files associated with Part A are:
+### 3.1. Definition
 
-| File | Purpose |
+SLD stands for:
+
+**Selective Linear Definite Clause Resolution.**
+
+SLD resolution is a proof procedure used to resolve logical goals using definite Horn clauses.
+
+A definite Horn clause can be a fact or a rule.
+
+The meta-interpreter follows a goal-directed resolution process.
+
+### 3.2. General Resolution Process
+
+The main operations are:
+
+1. Receive a query.
+2. Identify its pending goals.
+3. Select the leftmost pending goal.
+4. Find an applicable program clause.
+5. Unify the selected goal with the clause head.
+6. Replace the selected goal with the clause body.
+7. Continue resolving the resulting goals.
+8. Explore alternative clauses through backtracking.
+9. Record success, failure, or a depth cutoff when appropriate.
+
+A resolution branch succeeds when no goals remain.
+
+A branch fails when its selected goal cannot be satisfied.
+
+When depth control is enabled, an unresolved branch may be stopped at the configured maximum depth.
+
+### 3.3. Facts
+
+A fact represents a relation that holds.
+
+Example:
+
+```prolog
+parent(ana, luis).
+```
+
+This fact states that Ana is a parent of Luis.
+
+A compatible query can succeed by unifying with this fact.
+
+### 3.4. Rules
+
+A definite Horn-clause rule derives a conclusion from other logical goals.
+
+Example:
+
+```prolog
+ancestor(X, Y) :-
+    parent(X, Y).
+```
+
+This rule states that X is an ancestor of Y if X is a parent of Y.
+
+Its components are:
+
+| Component | Example |
 |---|---|
-| `src/prolog/engine/sld_engine.pl` | Main SLD meta-interpreter and resolution engine. |
-| `tests/engine/sld_engine_tests.pl` | Automated tests for logical resolution. |
-| `tests/engine/sld_trace_tests.pl` | Automated tests for resolution traces. |
-| `examples/programs/family.pl` | Example program containing family relationships and recursive rules. |
-| `examples/programs/recursive_loop.pl` | Example program for testing recursive searches and depth limits. |
-| `docs/ENGINE_INTERFACE.md` | Proposed integration contract between Parts A and B. |
-| `docs/ENGINE_TECHNICAL.md` | Individual technical documentation for Part A. |
+| Head | `ancestor(X, Y)` |
+| Body | `parent(X, Y)` |
 
-The example programs are loaded into the SWI-Prolog `user` module.
+### 3.5. Recursive Rules
 
-The resolution engine inspects their clauses using:
+A recursive rule refers to the same predicate in its body.
+
+Example:
 
 ```prolog
-clause(user:Goal, Body)
+ancestor(X, Y) :-
+    parent(X, Z),
+    ancestor(Z, Y).
 ```
 
-This allows the meta-interpreter to select applicable facts and rules.
+The recursive call allows the engine to explore ancestor relationships involving more than one generation.
 
-## 4. Fundamentals of SLD Resolution
+### 3.6. Queries
 
-SLD resolution is based on the repeated selection and resolution of logical goals.
+A query requests the resolution of one or more logical goals.
 
-A query may contain a single goal:
-
-```prolog
-parent(ana, X)
-```
-
-Or a conjunction of goals:
-
-```prolog
-(parent(ana, X), parent(X, Y))
-```
-
-The engine processes these goals using a leftmost selection strategy.
-
-### 4.1. Goal Selection
-
-The leftmost pending goal is selected first.
-
-For example:
-
-```prolog
-(parent(ana, X), parent(X, Y))
-```
-
-The first selected goal is:
+Example:
 
 ```prolog
 parent(ana, X)
 ```
 
-If this goal succeeds with:
+Given:
+
+```prolog
+parent(ana, luis).
+parent(ana, marta).
+```
+
+the query has two solutions:
+
+```prolog
+X = luis
+X = marta
+```
+
+### 3.7. Conjunctions
+
+A conjunction requires several goals to succeed.
+
+Example:
+
+```prolog
+(parent(ana, X), parent(X, Y))
+```
+
+The first goal finds a child of Ana.
+
+The second goal uses that child to find another person.
+
+Both goals must succeed for the conjunction to produce a solution.
+
+### 3.8. Leftmost Goal Selection
+
+The engine selects the leftmost pending goal.
+
+For:
+
+```prolog
+(parent(ana, X), parent(X, Y))
+```
+
+the first goal selected is:
+
+```prolog
+parent(ana, X)
+```
+
+If it unifies with:
+
+```prolog
+parent(ana, luis)
+```
+
+the substitution is:
 
 ```prolog
 X = luis
@@ -133,76 +297,151 @@ The remaining goal becomes:
 parent(luis, Y)
 ```
 
-The engine then attempts to resolve that goal.
+This demonstrates how substitutions are propagated between goals.
 
-### 4.2. Unification
+---
 
-Unification determines whether two Prolog terms can be made identical through variable substitutions.
+## 4. Unification
 
-Consider:
+### 4.1. Definition
+
+Unification is the process of making two compatible Prolog terms identical through variable substitutions.
+
+The SLD resolution engine relies on SWI-Prolog's native unification mechanism.
+
+It does not implement a separate general-purpose unification algorithm.
+
+### 4.2. Example
+
+Consider the selected goal:
 
 ```prolog
 parent(ana, X)
 ```
 
-And the fact:
+and the fact:
 
 ```prolog
-parent(ana, luis).
+parent(ana, luis)
 ```
 
-These terms unify with the substitution:
+They unify with:
 
 ```prolog
 X = luis
 ```
 
-The engine uses Prolog's native unification mechanism when selecting applicable clauses.
+The selected goal can then be resolved using that fact.
 
-### 4.3. Clause Resolution
+### 4.3. Shared Variables
 
-When a goal matches a fact, the selected goal can be removed from the pending goals.
+Variables can appear in multiple goals.
 
-When a goal matches a rule, the rule body replaces the selected goal.
-
-For example:
+Example:
 
 ```prolog
-ancestor(X, Y) :-
-    parent(X, Y).
+(parent(ana, X), parent(X, Y))
 ```
 
-A query such as:
+The value assigned to `X` while resolving the first goal is shared with the second goal.
+
+The recorded solutions are:
 
 ```prolog
-ancestor(ana, X)
+[
+    luis-sofia,
+    marta-diego
+]
 ```
 
-can be resolved by replacing the selected goal with:
+The first solution corresponds to:
 
 ```prolog
-parent(ana, X)
+X = luis,
+Y = sofia.
 ```
 
-Resolution continues until all goals are satisfied or the branch cannot proceed.
+The second solution corresponds to:
 
-### 4.4. Resolution Outcomes
+```prolog
+X = marta,
+Y = diego.
+```
 
-The depth-limited engine distinguishes three terminal outcomes:
+### 4.4. Logical Variable Identity
 
-| Outcome | Meaning |
+Unification does not always assign a concrete value.
+
+Two variables can become references to the same logical variable while remaining unbound.
+
+This situation is called variable aliasing.
+
+The tracing mechanism distinguishes variable aliasing from independent unbound variables.
+
+### 4.5. Native SWI-Prolog Unification
+
+The meta-interpreter uses Prolog's own logical operations when matching a selected goal with a clause head.
+
+This is consistent with the approved educational objective: implementing a meta-interpreter using Prolog's logical resolution mechanisms.
+
+---
+
+## 5. Main Implementation Files
+
+### 5.1. SLD Resolution Engine
+
+```text
+src/prolog/engine/sld_engine.pl
+```
+
+This file contains the meta-interpreter and its public resolution predicates.
+
+### 5.2. Automated Tests
+
+| File | Purpose |
 |---|---|
-| `success` | All pending goals have been satisfied. |
-| `failure` | The selected goal has no applicable unifiable clause. |
-| `cutoff` | The configured depth limit prevents further resolution. |
+| `tests/engine/sld_engine_tests.pl` | Tests of basic logical resolution. |
+| `tests/engine/sld_trace_tests.pl` | Tests of resolution events and trace behavior. |
+| `tests/engine/sld_alias_tests.pl` | Tests of unification and variable-alias representation. |
+| `tests/engine/sld_step_contract_tests.pl` | Verifies the eight-field `step/8` contract, including facts, rules, pending goals, substitutions, failure, cutoff, and backtracking. |
 
-A cutoff does not necessarily indicate that a query is logically false.
+### 5.3. Example Programs
 
-It only indicates that the branch was not explored beyond the configured limit.
+| File | Purpose |
+|---|---|
+| `examples/programs/family.pl` | Family facts and recursive rules. |
+| `examples/programs/recursive_loop.pl` | Recursive examples for depth-limit and alternative-exploration tests. |
+| `examples/programs/alias_demo.pl` | Examples of aliased and independent variables. |
 
-## 5. Public Engine Interface
+### 5.4. Demonstration Files
 
-The main module is declared as:
+| File | Purpose |
+|---|---|
+| `examples/queries/sld_demo_cases.pl` | Defines the twelve demonstration cases. |
+| `examples/queries/sld_demo_runner.pl` | Executes the cases and displays organized console reports. |
+
+### 5.5. Documentation
+
+| File | Purpose |
+|---|---|
+| `docs/ENGINE_TECHNICAL.md` | Technical design and implementation explanation. |
+| `docs/ENGINE_INTERFACE.md` | Public predicates and integration contract. |
+| `docs/ENGINE_DEMO.md` | Individual demonstration procedure. |
+| `docs/evidence/engine/README.md` | Execution-evidence inventory and explanation. |
+
+### 5.6. Program Clause Source
+
+The supported example programs are loaded into the SWI-Prolog `user` module.
+
+The meta-interpreter obtains applicable program clauses through SWI-Prolog's clause-inspection mechanisms.
+
+The implementation is not intended to interpret the complete Prolog module system.
+
+---
+
+## 6. Public Engine Interface
+
+The main module exports:
 
 ```prolog
 :- module(sld_engine, [
@@ -212,62 +451,118 @@ The main module is declared as:
 ]).
 ```
 
-It exports three public predicates.
+### 6.1. API Summary
 
-### 5.1. Basic Meta-Interpreter: `sld_solve/1`
+| Predicate | Purpose |
+|---|---|
+| `sld_solve/1` | Resolve supported queries without a configurable depth limit. |
+| `sld_solve_limited/3` | Explore resolution branches with a configurable maximum depth. |
+| `sld_trace/4` | Generate chronological resolution events and successful answers. |
 
-Signature:
+These predicates provide the main functionality of Part A.
+
+---
+
+## 7. Basic Resolution - `sld_solve/1`
+
+### 7.1. Signature
 
 ```prolog
 sld_solve(+Query).
 ```
 
-This predicate resolves logical queries using SLD resolution.
+### 7.2. Purpose
 
-It supports:
+Resolve a supported query using logical resolution.
 
-- Facts.
-- Rules.
-- Conjunctions.
-- Unification.
-- Recursive goals.
-- Backtracking.
-- Multiple solutions.
+Prolog backtracking is used to enumerate additional solutions.
 
-The basic meta-interpreter does not impose a depth limit.
-
-Example:
+### 7.3. Example: Facts
 
 ```prolog
-?- sld_engine:sld_solve(parent(ana, X)).
+?- findall(
+       X,
+       sld_engine:sld_solve(parent(ana, X)),
+       Answers
+   ).
 ```
 
-The expected solutions are:
+Verified result:
 
 ```prolog
-X = luis ;
-X = marta.
+Answers = [luis, marta].
 ```
 
-The predicate uses Prolog's backtracking mechanism to explore alternative clauses.
+### 7.4. Example: Rules
 
-**Limitation:** Queries involving infinite recursion may not terminate when this predicate is used without a depth limit.
+```prolog
+?- findall(
+       X,
+       sld_engine:sld_solve(ancestor(ana, X)),
+       Answers
+   ).
+```
 
-### 5.2. Depth-Limited Resolution: `sld_solve_limited/3`
+Verified result:
 
-Signature:
+```prolog
+Answers = [luis, marta, sofia, diego].
+```
+
+### 7.5. Example: Conjunctions
+
+```prolog
+?- findall(
+       X-Y,
+       sld_engine:sld_solve(
+           (
+               parent(ana, X),
+               parent(X, Y)
+           )
+       ),
+       Answers
+   ).
+```
+
+Verified result:
+
+```prolog
+Answers = [luis-sofia, marta-diego].
+```
+
+### 7.6. Important Limitation
+
+The `sld_solve/1` predicate does not impose a configurable maximum depth.
+
+A recursive query without a terminating base case may continue indefinitely.
+
+Depth-controlled demonstrations should use the limited-resolution or tracing interface.
+
+---
+
+## 8. Configurable Depth Control - `sld_solve_limited/3`
+
+### 8.1. Signature
 
 ```prolog
 sld_solve_limited(+Query, +MaxDepth, -Outcome).
 ```
 
-Parameters:
+### 8.2. Purpose
 
-- `Query`: The logical query to resolve.
-- `MaxDepth`: A non-negative integer specifying the maximum resolution depth.
-- `Outcome`: The terminal result of an explored branch.
+Explore supported resolution branches using a configurable maximum depth.
 
-The possible outcomes are:
+### 8.3. Arguments
+
+| Argument | Description |
+|---|---|
+| `Query` | Supported logical query. |
+| `MaxDepth` | Non-negative integer resolution-depth limit. |
+| `Outcome` | Terminal outcome of an explored branch. |
+
+### 8.4. Terminal Outcomes
+
+The documented terminal outcomes are:
 
 ```prolog
 success
@@ -275,113 +570,91 @@ failure
 cutoff
 ```
 
-The predicate explores alternative branches through backtracking.
+| Outcome | Meaning |
+|---|---|
+| `success` | All pending goals in the branch have been resolved. |
+| `failure` | The selected goal cannot be satisfied in the explored branch. |
+| `cutoff` | The configured depth limit prevents further exploration. |
 
-Therefore, a single query may produce multiple terminal outcomes.
+The predicate can enumerate multiple branch outcomes through Prolog backtracking.
 
-#### Example: Successful Resolution
+### 8.5. Depth Convention
 
-```prolog
-?- findall(
-       Status,
-       sld_engine:sld_solve_limited(parent(ana, _), 1, Status),
-       Statuses
-   ).
-```
-
-Observed result:
+The initial query begins at:
 
 ```prolog
-Statuses = [success, success].
+Depth = 0
 ```
 
-Both parent facts are successfully resolved.
+Each application of a program clause increases the resolution depth by one.
 
-#### Example: Depth Cutoff
+A branch can succeed when no pending goals remain.
+
+If unresolved goals remain and the maximum depth prevents another clause application, a cutoff is recorded.
+
+### 8.6. Verified Configurable Depth Example
+
+Query:
 
 ```prolog
-?- findall(
-       Status,
-       sld_engine:sld_solve_limited(parent(ana, _), 0, Status),
-       Statuses
-   ).
+ancestor(ana, _).
 ```
 
-Observed result:
+Maximum depth 2:
 
 ```prolog
-Statuses = [cutoff].
+[success, success, cutoff, cutoff]
 ```
 
-The selected goal cannot be expanded because the maximum depth is zero.
-
-#### Example: Failed Resolution
+Maximum depth 4:
 
 ```prolog
-?- findall(
-       Status,
-       sld_engine:sld_solve_limited(parent(diego, _), 1, Status),
-       Statuses
-   ).
+[success, success, success, cutoff, success, cutoff]
 ```
 
-Observed result:
+The recorded output was:
 
-```prolog
-Statuses = [failure].
+```text
+=== CONFIGURABLE DEPTH CONTROL ===
+
+Maximum depth 2 : [success,success,cutoff,cutoff]
+Maximum depth 4 : [success,success,success,cutoff,success,cutoff]
+
+RESULT: PASSED
 ```
 
-No applicable fact or rule can satisfy the selected goal.
+### 8.7. Failure Versus Cutoff
 
-### 5.3. Resolution Tracing: `sld_trace/4`
+A logical failure and a depth cutoff have different meanings.
 
-Signature:
+A failure means that the selected goal cannot be satisfied in the explored branch.
 
-```prolog
-sld_trace(+Query, +MaxDepth, -Steps, -Answers).
-```
+A cutoff means that further exploration was prevented by the configured depth limit.
 
-This predicate performs depth-limited resolution and records the resolution process.
+A cutoff does not establish that the original query is false.
 
-Parameters:
+### 8.8. Depth-Control Limitations
 
-**Query**
+The maximum depth restricts individual resolution branches.
 
-The Prolog query to resolve.
+It is not:
 
-**MaxDepth**
+- A global execution-time limit.
+- A maximum memory limit.
+- A maximum number of generated events.
+- A complete termination guarantee for every possible program.
 
-A non-negative integer defining the maximum number of clause applications along a branch.
+The implementation expects a valid non-negative integer maximum depth.
 
-**Steps**
+---
 
-An ordered list containing the resolution events.
+## 9. Internal Meta-Interpreter Design
 
-**Answers**
+### 9.1. Pending Goals
 
-A list containing the successful solutions and their variable substitutions.
+The meta-interpreter processes queries as sequences of pending goals.
 
-The trace predicate returns an aggregated representation of the explored resolution process.
-
-Unlike `sld_solve/1`, it does not instantiate the original query variables separately for each solution.
-
-Instead, solutions are returned through `Answers`.
-
-This behavior allows the engine to preserve information about successful, failed, and depth-limited branches.
-
-## 6. Internal Engine Design
-
-### 6.1. Converting Goals into Lists
-
-The internal predicate:
-
-```prolog
-goals_to_list(+Query, -Goals)
-```
-
-converts a query into a list of pending goals.
-
-For example:
+A conjunction such as:
 
 ```prolog
 (parent(ana, X), parent(X, Y))
@@ -396,102 +669,111 @@ is conceptually represented as:
 ]
 ```
 
-The special goal:
+The special empty goal:
 
 ```prolog
 true
 ```
 
-is converted into an empty goal list:
+corresponds to an empty pending-goal sequence.
+
+### 9.2. Leftmost Selection
+
+For a nonempty goal list:
 
 ```prolog
-[]
+[Goal | RemainingGoals]
 ```
 
-This representation simplifies goal selection and resolution.
+the engine selects `Goal` first.
 
-### 6.2. Basic Goal Resolution
+The remaining goals are retained for later resolution.
 
-The internal predicate:
+### 9.3. Clause Selection
+
+The engine finds program clauses whose heads are applicable to the selected goal.
+
+A clause can be a fact:
 
 ```prolog
-resolve_goals(+Goals)
+parent(ana, luis).
 ```
 
-processes the pending goals.
-
-The algorithm follows these steps:
-
-1. Check whether the goal list is empty.
-2. If it is empty, resolution succeeds.
-3. Otherwise, select the leftmost goal.
-4. Search for an applicable clause.
-5. Unify the selected goal with the clause head.
-6. Convert the clause body into a list of goals.
-7. Replace the selected goal with the body goals.
-8. Continue resolving the remaining goals.
-
-The engine uses:
+or a rule:
 
 ```prolog
-clause(user:Goal, Body)
+ancestor(X, Y) :-
+    parent(X, Y).
 ```
 
-to select applicable clauses.
+### 9.4. Clause Application
 
-It also uses:
+For a selected rule:
 
 ```prolog
-append/3
+Head :- Body.
 ```
 
-to combine the clause body goals with the remaining goals.
+the engine:
 
-### 6.3. Depth-Limited Resolution
+1. Unifies the selected goal with `Head`.
+2. Converts `Body` into pending goals.
+3. Places those goals before the remaining query goals.
+4. Continues resolution.
 
-The internal predicate:
+### 9.5. Conceptual Resolution Algorithm
 
-```prolog
-resolve_limited(+Goals, +Depth, +MaxDepth, -Outcome)
+The following pseudocode describes the general resolution strategy.
+
+```text
+RESOLVE(PendingGoals):
+
+    IF PendingGoals is empty:
+        Report success.
+
+    OTHERWISE:
+        Select the leftmost goal.
+
+        FOR each applicable program clause:
+            Unify the selected goal with the clause head.
+
+            Replace the selected goal
+            with the clause body.
+
+            Continue resolving the new goal list.
+
+        Use backtracking to explore alternatives.
 ```
 
-extends the basic resolution process with a configurable depth limit.
+The actual implementation uses SWI-Prolog predicates and logical control flow.
 
-The initial depth is zero.
+This pseudocode is an explanation of the algorithm, not a replacement for the source code.
 
-Every applied clause increases the depth by one.
+### 9.6. Resolution State
 
-The resolution process follows three main conditions:
+A resolution state conceptually includes:
 
-**Success**
+- Pending goals.
+- Current substitutions.
+- Resolution depth.
+- Clause-choice path.
+- Available alternatives.
 
-If no goals remain:
+The trace generator additionally records stable snapshots of relevant state information.
 
-```prolog
-Outcome = success
-```
+### 9.7. Independent Alternatives
 
-**Cutoff**
+Different clause alternatives must be explored without allowing substitutions from one branch to corrupt another branch's recorded information.
 
-If unresolved goals remain and the maximum depth has been reached:
+The trace implementation uses Prolog's logical mechanisms together with term copying and collected alternatives where needed.
 
-```prolog
-Outcome = cutoff
-```
+Earlier recorded event snapshots remain stable when later alternatives are explored.
 
-**Failure**
+---
 
-If the selected goal has no applicable clause:
+## 10. Recursive Resolution
 
-```prolog
-Outcome = failure
-```
-
-When an applicable clause exists and the depth limit allows further expansion, resolution continues recursively.
-
-### 6.4. Recursive Resolution
-
-Recursive rules are processed using the same goal-resolution mechanism.
+### 10.1. Recursive Ancestor Rules
 
 Consider:
 
@@ -504,113 +786,238 @@ ancestor(X, Y) :-
     ancestor(Z, Y).
 ```
 
-The second rule contains a recursive call to `ancestor/2`.
+The first rule handles direct parent relationships.
 
-The engine replaces the selected goal with the rule body and continues resolving the resulting goals.
+The second rule handles ancestor relationships that require additional generations.
 
-The depth limit prevents an individual recursive branch from expanding indefinitely.
+### 10.2. Example Query
 
-### 6.5. Backtracking
+```prolog
+ancestor(ana, X).
+```
 
-Backtracking allows the engine to explore alternative clauses.
+The query can obtain:
 
-For example:
+```text
+luis
+marta
+sofia
+diego
+```
+
+### 10.3. Recursive Execution
+
+When the recursive rule is selected, the engine introduces another `ancestor/2` goal.
+
+That goal is resolved using the same meta-interpretation process.
+
+The resolution continues until the branch:
+
+1. Succeeds.
+2. Fails.
+3. Reaches a configured depth cutoff.
+
+### 10.4. Verified Recursion Demonstration
+
+Demonstration case 9 produced:
+
+| Metric | Recorded result |
+|---|---:|
+| Resolution events | 26 |
+| Successful answers | 4 |
+| Depth cutoffs | 2 |
+| Backtracking events | 5 |
+| Final result | PASSED |
+
+### 10.5. Interpretation of Cutoffs
+
+The presence of depth cutoffs does not invalidate successful solutions obtained in other branches.
+
+It indicates that additional recursive exploration was prevented in the depth-limited branches.
+
+---
+
+## 11. Backtracking
+
+### 11.1. Definition
+
+Backtracking allows Prolog to explore alternative clauses when searching for solutions.
+
+If one resolution branch fails, another applicable alternative may still succeed.
+
+Backtracking is also used to obtain additional successful solutions.
+
+### 11.2. Multiple Solutions
+
+Given:
 
 ```prolog
 parent(ana, luis).
 parent(ana, marta).
 ```
 
-The query:
+the query:
 
 ```prolog
-parent(ana, X)
+parent(ana, X).
 ```
 
-has two possible resolutions.
-
-The engine first explores:
+can produce:
 
 ```prolog
-X = luis
+X = luis ;
+X = marta.
 ```
 
-It then explores the second applicable fact:
+The first successful answer does not prevent Prolog from exploring another applicable fact.
+
+### 11.3. Backtracking After Failure
+
+Consider:
 
 ```prolog
-X = marta
+(parent(ana, X), parent(X, diego)).
 ```
 
-In the trace generator, alternative resolution states are collected independently.
-
-The implementation uses:
+The first alternative can bind:
 
 ```prolog
-findall/3
+X = luis.
 ```
 
-to collect applicable clause alternatives and:
+The remaining goal becomes:
 
 ```prolog
-copy_term/2
+parent(luis, diego).
 ```
 
-to create independent copies of resolution states.
+This fails.
 
-The internal predicate:
+The engine then explores another alternative:
 
 ```prolog
-trace_choices/10
+X = marta.
 ```
 
-explores the alternatives and records backtracking events when another applicable alternative remains.
-
-This design prevents substitutions from one branch from modifying previously recorded information.
-
-## 7. Resolution Trace Representation
-
-The engine generates stable information about the resolution process.
-
-This information is intended for the SLD tree construction module developed by Roy.
-
-### 7.1. Resolution Snapshots
-
-The implementation includes predicates for recording stable representations of resolution data.
-
-**`snapshot_term/2`**
-
-Creates a stable textual representation of a Prolog term.
-
-**`snapshot_goals/2`**
-
-Creates textual snapshots of the remaining goals while preserving variable relationships within the copied goal list.
-
-**`snapshot_bindings/2`**
-
-Records the substitutions associated with the original query variables.
-
-**`number_trace_events/3`**
-
-Converts internal resolution events into public step records with chronological sequence numbers.
-
-The implementation uses Prolog mechanisms such as:
+The remaining goal becomes:
 
 ```prolog
-copy_term/2
-numbervars/3
-term_string/3
-term_variables/2
-findall/3
-append/3
+parent(marta, diego).
 ```
 
-These predicates support the internal operation of the engine.
+This succeeds.
 
-They are not interpreted as arbitrary user-program goals.
+### 11.4. Verified Backtracking Results
 
-### 7.2. Resolution Step Structure
+Demonstration case 8 produced:
 
-Each resolution step has the following structure:
+| Metric | Recorded result |
+|---|---:|
+| Resolution events | 7 |
+| Successful answers | 1 |
+| Failed branches | 1 |
+| Backtracking events | 1 |
+| Final result | PASSED |
+
+### 11.5. Backtracking in the Trace
+
+The tracing mechanism records backtracking using the action:
+
+```prolog
+backtrack
+```
+
+A backtracking event identifies a return to an earlier resolution state.
+
+It is not a newly applied clause.
+
+---
+
+## 12. Structured Resolution Tracing
+
+### 12.1. Public Interface
+
+The principal tracing predicate is:
+
+```prolog
+sld_trace(+Query, +MaxDepth, -Steps, -Answers).
+```
+
+It collects chronological resolution information and successful answers.
+
+### 12.2. Purpose
+
+The trace provides information required by the component responsible for constructing the SLD tree.
+
+It records:
+
+- Selected goals.
+- Applied clauses.
+- Remaining goals.
+- Resolution depth.
+- Clause-choice paths.
+- Variable substitutions.
+- Successful branches.
+- Failed branches.
+- Depth cutoffs.
+- Backtracking.
+
+### 12.3. Output Arguments
+
+| Argument | Meaning |
+|---|---|
+| `Steps` | Chronological list of resolution events. |
+| `Answers` | Successful answers and their recorded bindings. |
+
+The trace is an aggregated description of the explored resolution process.
+
+### 12.4. Stable Snapshots
+
+The engine generates stable representations of relevant resolution states.
+
+This is important because Prolog variables can receive different substitutions in different branches.
+
+Without stable snapshots, later unification or backtracking could make previously recorded information misleading.
+
+The trace therefore records textual representations of relevant terms and substitutions.
+
+### 12.5. Original Query Variables
+
+Variables from the original query are tracked for answer reporting.
+
+The implementation generates labels such as:
+
+```text
+V1
+V2
+V3
+```
+
+The labels identify tracked variables in the trace.
+
+They do not necessarily preserve the original source-level variable names.
+
+### 12.6. Internal Mechanisms
+
+The implementation relies on SWI-Prolog mechanisms for tasks such as:
+
+- Inspecting program clauses.
+- Unifying terms.
+- Enumerating alternatives.
+- Copying terms.
+- Inspecting variables.
+- Formatting stable term snapshots.
+- Combining pending goals.
+
+These are internal implementation mechanisms.
+
+Their use does not imply that arbitrary built-in predicates are supported as interpreted user goals.
+
+---
+
+## 13. `step/8` Event Structure
+
+Each resolution event has the form:
 
 ```prolog
 step(
@@ -625,416 +1032,1010 @@ step(
 ).
 ```
 
-The fields are defined as follows:
+### 13.1. Event Fields
 
-| Field | Description |
-|---|---|
-| `Sequence` | Chronological event number, starting at 1. |
-| `Path` | List identifying the explored clause alternatives. |
-| `Depth` | Number of clause applications along the current branch. |
-| `Action` | Type of resolution event. |
-| `Goal` | Stable textual representation of the selected goal, or `none`. |
-| `Clause` | Stable textual representation of the applied clause, or `none`. |
-| `RemainingGoals` | List of textual representations of pending goals. |
-| `Bindings` | Current substitutions for the original query variables. |
+| Field | Representation | Meaning |
+|---|---|---|
+| `Sequence` | Positive integer | Chronological event number. |
+| `Path` | List of positive integers | Clause-alternative choices along the branch. |
+| `Depth` | Non-negative integer | Resolution depth of the event. |
+| `Action` | Atom | Type of resolution event. |
+| `Goal` | String or atom `none` | Selected goal or relevant query snapshot. |
+| `Clause` | String or atom `none` | Applied clause snapshot, when applicable. |
+| `RemainingGoals` | List of strings | Pending-goal snapshots. |
+| `Bindings` | List of `binding/2` terms | Tracked original query-variable substitutions. |
 
-The initial path is:
+### 13.2. Chronological Sequence
+
+The event sequence starts at:
+
+```prolog
+1
+```
+
+The sequence numbers record event order.
+
+They are not tree-node identifiers.
+
+### 13.3. Resolution Paths
+
+The root path is:
 
 ```prolog
 []
 ```
 
-When a clause alternative is selected, its position is added to the path.
-
-Examples:
+Example paths include:
 
 ```prolog
 [1]
 [2]
 [1,1]
 [1,2]
+[2,1]
 ```
 
-The paths identify resolution alternatives.
+The path represents selected clause alternatives along the resolution branch.
 
-They are not final graphical tree-node identifiers.
+### 13.4. Path Interpretation
 
-### 7.3. Resolution Actions
+A resolution path is not necessarily a unique identifier for every recorded event.
 
-The engine supports the following actions:
+Several events can share the same path.
+
+For example, a clause application and its resulting success can share a path.
+
+Part B must use the event information to construct the logical tree.
+
+### 13.5. Depth
+
+The initial depth is:
+
+```prolog
+0
+```
+
+Each applied clause increases the depth by one.
+
+Backtracking may restore an earlier depth.
+
+### 13.6. Goal and Clause Snapshots
+
+Examples:
+
+```prolog
+"parent(ana,A)"
+"parent(ana,luis)"
+"ancestor(ana,A)"
+```
+
+These values are textual snapshots.
+
+They are not live references to internal Prolog variables.
+
+### 13.7. The `none` Atom
+
+For events without a selected goal or applied clause, the corresponding field may contain:
+
+```prolog
+none
+```
+
+The atom `none` is different from the string `"none"`.
+
+The consumer must preserve this distinction.
+
+### 13.8. Pending Goals
+
+The `RemainingGoals` field contains a list of textual goal snapshots.
+
+Examples:
+
+```prolog
+[]
+```
+
+```prolog
+["parent(luis,A)"]
+```
+
+An empty list indicates that no goals remain pending in that recorded state.
+
+---
+
+## 14. Supported Resolution Actions
+
+The engine records the following actions:
+
+```prolog
+start
+apply
+success
+failure
+cutoff
+backtrack
+```
+
+### 14.1. Action Summary
 
 | Action | Meaning |
 |---|---|
-| `start` | Resolution begins. |
-| `apply` | An applicable clause is selected and applied. |
-| `success` | All pending goals have been satisfied. |
-| `failure` | No applicable clause can resolve the selected goal. |
-| `cutoff` | The configured depth limit prevents further expansion. |
-| `backtrack` | Resolution returns to a parent state to explore another applicable alternative. |
+| `start` | Initial resolution state. |
+| `apply` | Application of an applicable program clause. |
+| `success` | Successful completion of a resolution branch. |
+| `failure` | An explored branch cannot satisfy the selected goal. |
+| `cutoff` | The maximum resolution depth prevents further exploration. |
+| `backtrack` | Return to an earlier resolution state to explore another alternative. |
 
-The distinction between `failure` and `cutoff` is essential.
+### 14.2. `start`
 
-A branch stopped by the depth limit must not automatically be classified as logically false.
+The initial event records:
 
-The engine does not necessarily generate a separate failure event for every ancestor of a failed branch.
+- The original query.
+- Root path.
+- Depth zero.
+- Initial variable bindings.
 
-Part B must interpret the recorded paths and terminal events when constructing the complete tree.
+### 14.3. `apply`
 
-### 7.4. Variable Substitutions
+An `apply` event records an explored clause alternative.
 
-Variable substitutions are represented using:
+It can contain:
+
+- Selected goal.
+- Applied clause.
+- Updated path.
+- Updated depth.
+- Remaining goals.
+- Variable bindings.
+
+### 14.4. `success`
+
+A `success` event indicates that all pending goals have been resolved.
+
+The corresponding answer is included in the `Answers` output.
+
+### 14.5. `failure`
+
+A `failure` event identifies a terminal unsuccessful branch.
+
+The engine does not necessarily create a separate failure event for every ancestor state whose descendants fail.
+
+The tree builder must determine higher-level branch relationships from the recorded events.
+
+### 14.6. `cutoff`
+
+A `cutoff` event identifies a branch stopped by the configured maximum depth.
+
+It must not be interpreted as proof of logical falsity.
+
+### 14.7. `backtrack`
+
+A `backtrack` event indicates restoration of an earlier resolution state.
+
+It does not represent a new fact or rule application.
+
+### 14.8. Trace Versus Tree
+
+The chronological resolution trace is not identical to the final graphical SLD tree.
+
+The trace records events that occur during resolution.
+
+Part B uses these events to construct nodes, branches, and their relationships.
+
+---
+
+## 15. Variable Substitution Snapshots
+
+### 15.1. Binding Structure
+
+The engine represents tracked variable substitutions using:
 
 ```prolog
-binding(VariableName, Value)
+binding(VariableName, Value).
 ```
 
-Example:
+Examples:
 
 ```prolog
 binding("V1", "luis")
+binding("V2", "marta")
+binding("V3", "_")
 ```
 
-Original query variables receive stable names:
+### 15.2. Generated Variable Identifiers
 
-```prolog
+The tracing mechanism uses generated identifiers such as:
+
+```text
 V1
 V2
 V3
 ```
 
-These names are assigned according to the order of the original query variables.
+These identifiers correspond to variables tracked from the original query.
 
-An unbound variable is represented by:
+They are generated for tracing purposes.
 
-```prolog
-binding("V2", "_")
-```
+### 15.3. Concrete Substitutions
 
-Both the variable name and its recorded value are strings.
-
-The engine uses stable snapshots so that previously recorded substitutions do not change during backtracking.
-
-### 7.5. Successful Answers
-
-Successful resolutions are represented as:
+A variable with a concrete value can be represented as:
 
 ```prolog
-answer(Path, Bindings)
+binding("V1", "luis")
 ```
 
-Example:
+### 15.4. Unbound Variables
+
+An unbound tracked variable can be represented as:
+
+```prolog
+binding("V1", "_")
+```
+
+The string `"_"` is the unbound-variable marker.
+
+### 15.5. Stable Binding Snapshots
+
+The bindings recorded for an event describe the substitutions associated with that event.
+
+They are not live mutable references to the internal resolution variables.
+
+This allows earlier events to retain their recorded meaning after backtracking.
+
+---
+
+## 16. Variable Aliasing
+
+### 16.1. Definition
+
+Variable aliasing occurs when two variables refer to the same logical variable.
+
+The variables may remain unbound even though their identities have become shared.
+
+### 16.2. Original Representation Limitation
+
+A simple textual representation of all unbound variables as:
+
+```prolog
+"_"
+```
+
+cannot distinguish two situations:
+
+1. Two independent unbound variables.
+2. Two variables that have become aliases.
+
+The logical unification may be correct while the recorded trace omits the relationship.
+
+### 16.3. Improved Representation
+
+The trace now distinguishes these situations using an alias reference.
+
+For example:
+
+```prolog
+[
+    binding("V1", "_"),
+    binding("V2", "alias(V1)")
+]
+```
+
+This indicates that `V2` refers to the same still-unbound logical variable as `V1`.
+
+### 16.4. Independent Variables
+
+Two independent unbound variables are represented as:
+
+```prolog
+[
+    binding("V1", "_"),
+    binding("V2", "_")
+]
+```
+
+### 16.5. Technical Principle
+
+Prolog term identity can determine whether two tracked variables refer to the same logical variable.
+
+The identity comparison operator is:
+
+```prolog
+==
+```
+
+For tracked unbound variables, an identity comparison can distinguish aliases from independent variables.
+
+The snapshot-generation logic can then refer to an earlier tracked variable using its stable label.
+
+### 16.6. Example: Aliased Variables
+
+Example fact:
+
+```prolog
+aliased_pair(X, X).
+```
+
+Query:
+
+```prolog
+aliased_pair(A, B).
+```
+
+Verified answer representation:
 
 ```prolog
 answer(
     [1],
-    [binding("V1", "luis")]
-)
+    [
+        binding("V1", "_"),
+        binding("V2", "alias(V1)")
+    ]
+).
 ```
 
-The path identifies the successful resolution alternative.
+### 16.7. Example: Independent Variables
 
-The bindings contain the corresponding substitutions for the original query variables.
-
-This representation allows the tree construction module to associate each answer with its successful branch.
-
-## 8. Execution Examples and Observed Results
-
-The following examples were executed using SWI-Prolog 10.0.2 on Windows.
-
-All commands must be executed from the root directory of the project.
-
-### 8.1. Query with Multiple Solutions
-
-Command:
-
-```cmd
-swipl -q -s examples/programs/family.pl -s src/prolog/engine/sld_engine.pl -g "sld_engine:sld_trace(parent(ana,X),1,Steps,Answers),writeln(Steps),writeln(Answers),halt."
-```
-
-The expected logical solutions are:
+Example fact:
 
 ```prolog
-X = luis
-X = marta
+independent_pair(_, _).
 ```
 
-The observed answers correspond to:
+Query:
 
 ```prolog
-[
-    answer([1], [binding("V1", "luis")]),
-    answer([2], [binding("V1", "marta")])
-]
+independent_pair(A, B).
 ```
 
-The resolution actions are:
+Verified answer representation:
 
 ```prolog
-[
-    start,
-    apply,
-    success,
-    backtrack,
-    apply,
-    success
-]
+answer(
+    [1],
+    [
+        binding("V1", "_"),
+        binding("V2", "_")
+    ]
+).
 ```
 
-This example demonstrates:
+### 16.8. Interface Compatibility
 
-- Fact resolution.
-- Unification.
-- Multiple solutions.
-- Backtracking.
-- Resolution tracing.
-- Variable substitutions.
-
-**Note:** SWI-Prolog's `writeln/1` may display string contents without visible quotation marks. This does not change their string representation.
-
-### 8.2. Failed Query
-
-Command:
-
-```cmd
-swipl -q -s examples/programs/family.pl -s src/prolog/engine/sld_engine.pl -g "sld_engine:sld_trace(parent(diego,X),2,Steps,Answers),writeln(Steps),writeln(Answers),halt."
-```
-
-The observed resolution actions are:
+The structure remains:
 
 ```prolog
-[
-    start,
-    failure
-]
+binding(VariableName, Value).
 ```
 
-The answer list is:
-
-```prolog
-[]
-```
-
-The selected goal cannot be satisfied by an applicable clause.
-
-### 8.3. Zero Depth Limit
-
-Command:
-
-```cmd
-swipl -q -s examples/programs/family.pl -s src/prolog/engine/sld_engine.pl -g "sld_engine:sld_trace(parent(ana,X),0,Steps,Answers),writeln(Steps),writeln(Answers),halt."
-```
-
-The observed resolution actions are:
-
-```prolog
-[
-    start,
-    cutoff
-]
-```
-
-The answer list is:
-
-```prolog
-[]
-```
-
-This example demonstrates that no clause can be applied when the maximum depth is zero and unresolved goals remain.
-
-### 8.4. Recursive Ancestor Query
-
-Command:
-
-```cmd
-swipl -q -s examples/programs/family.pl -s src/prolog/engine/sld_engine.pl -g "sld_engine:sld_trace(ancestor(ana,X),4,Steps,Answers),writeln(Answers),length(Steps,N),format('Total steps: \~w\~n',[N]),halt."
-```
-
-The observed logical solutions are:
-
-```prolog
-X = luis
-X = marta
-X = sofia
-X = diego
-```
-
-The corresponding successful answers are:
-
-```prolog
-[
-    answer([1,1], [binding("V1", "luis")]),
-    answer([1,2], [binding("V1", "marta")]),
-    answer([2,1,1,1], [binding("V1", "sofia")]),
-    answer([2,2,1,1], [binding("V1", "diego")])
-]
-```
-
-The observed total number of resolution steps is:
+However, the value may contain:
 
 ```text
-Total steps: 26
+alias(V1)
 ```
+
+Roy's tree-building component must preserve and interpret this information correctly.
+
+### 16.9. Representation Limitation
+
+The alias notation is a textual representation used by the tracing interface.
+
+It is not a new Prolog language construct.
+
+It preserves the tested alias relationships among tracked original query variables that remain unbound.
+
+It is not a complete serialization of all possible variable-sharing relationships inside arbitrary nested terms.
+
+---
+
+## 17. Successful Answer Representation
+
+### 17.1. Structure
+
+Successful resolution branches are represented using:
+
+```prolog
+answer(Path, Bindings).
+```
+
+### 17.2. Fields
+
+| Field | Meaning |
+|---|---|
+| `Path` | Recorded resolution path associated with the successful branch. |
+| `Bindings` | Snapshot of substitutions for tracked original query variables. |
+
+### 17.3. Example
+
+```prolog
+answer(
+    [1],
+    [
+        binding("V1", "luis")
+    ]
+).
+```
+
+### 17.4. Multiple Answers
+
+A query can produce:
+
+```prolog
+[
+    answer(
+        [1],
+        [
+            binding("V1", "luis")
+        ]
+    ),
+    answer(
+        [2],
+        [
+            binding("V1", "marta")
+        ]
+    )
+]
+```
+
+### 17.5. Failed Queries
+
+If no explored branch succeeds, the answer list is empty:
+
+```prolog
+Answers = []
+```
+
+The trace events are needed to distinguish logical failures from depth cutoffs.
+
+### 17.6. Integration Purpose
+
+Part B uses the path and bindings to associate successful answers with the corresponding branches of the constructed SLD tree.
+
+---
+
+## 18. Verified Resolution Trace Example
+
+### 18.1. Example Query
+
+```prolog
+parent(ana, X).
+```
+
+Maximum depth:
+
+```text
+1
+```
+
+### 18.2. Recorded Events
+
+```prolog
+step(1,[],0,start,"parent(ana,A)",none,["parent(ana,A)"],[binding("V1","_")])
+```
+
+```prolog
+step(2,[1],1,apply,"parent(ana,A)","parent(ana,luis)",[],[binding("V1","luis")])
+```
+
+```prolog
+step(3,[1],1,success,none,none,[],[binding("V1","luis")])
+```
+
+```prolog
+step(4,[],0,backtrack,"parent(ana,A)",none,["parent(ana,A)"],[binding("V1","_")])
+```
+
+```prolog
+step(5,[2],1,apply,"parent(ana,A)","parent(ana,marta)",[],[binding("V1","marta")])
+```
+
+```prolog
+step(6,[2],1,success,none,none,[],[binding("V1","marta")])
+```
+
+### 18.3. Successful Answers
+
+```prolog
+answer([1],[binding("V1","luis")])
+```
+
+```prolog
+answer([2],[binding("V1","marta")])
+```
+
+### 18.4. Interpretation
+
+| Event | Path | Action | Meaning |
+|---:|---|---|---|
+| 1 | `[]` | `start` | Start the query. |
+| 2 | `[1]` | `apply` | Apply the first matching fact. |
+| 3 | `[1]` | `success` | First successful answer. |
+| 4 | `[]` | `backtrack` | Restore the root state. |
+| 5 | `[2]` | `apply` | Apply the second matching fact. |
+| 6 | `[2]` | `success` | Second successful answer. |
+
+### 18.5. Technical Significance
 
 This example demonstrates:
 
-- Rule resolution.
+- Fact selection.
+- Unification.
+- Backtracking.
+- Multiple solutions.
+- Resolution paths.
+- Chronological event numbering.
+- Binding snapshots.
+- Successful-answer records.
+
+The structured information can be consumed by Part B.
+
+---
+
+## 19. Logical Failure and Depth-Cutoff Events
+
+### 19.1. Logical Failure
+
+Example query:
+
+```prolog
+parent(diego, X).
+```
+
+The example program contains no applicable fact satisfying this query.
+
+The recorded failure event includes:
+
+```prolog
+step(
+    2,
+    [],
+    0,
+    failure,
+    "parent(diego,A)",
+    none,
+    ["parent(diego,A)"],
+    [binding("V1","_")]
+).
+```
+
+### 19.2. Depth Cutoff
+
+Example query:
+
+```prolog
+endless.
+```
+
+Maximum depth:
+
+```text
+3
+```
+
+The recorded cutoff event includes:
+
+```prolog
+step(
+    5,
+    [1,1,1],
+    3,
+    cutoff,
+    "endless",
+    none,
+    ["endless"],
+    []
+).
+```
+
+### 19.3. Comparison
+
+| Event | Meaning |
+|---|---|
+| `failure` | The selected goal cannot be satisfied in the explored branch. |
+| `cutoff` | The configured maximum depth prevents additional exploration. |
+
+### 19.4. Importance for the Tree Builder
+
+Part B must preserve the distinction between these terminal outcomes.
+
+A depth-limited branch must not be misrepresented as an ordinary logical failure.
+
+---
+
+## 20. Twelve Demonstration Cases
+
+The demonstration definitions are located in:
+
+```text
+examples/queries/sld_demo_cases.pl
+```
+
+The runner is located in:
+
+```text
+examples/queries/sld_demo_runner.pl
+```
+
+### 20.1. Verified Scenarios
+
+| No. | Scenario | Expected | Observed | Result |
+|---:|---|---:|---:|---|
+| 1 | Multiple solutions from facts | 2 | 2 | PASSED |
+| 2 | Single fact solution - Luis | 1 | 1 | PASSED |
+| 3 | Single fact solution - Marta | 1 | 1 | PASSED |
+| 4 | Failed fact query | 0 | 0 | PASSED |
+| 5 | Successful ground query | 1 | 1 | PASSED |
+| 6 | Failed ground query | 0 | 0 | PASSED |
+| 7 | Conjunction and shared variables | 2 | 2 | PASSED |
+| 8 | Backtracking after a failed alternative | 1 | 1 | PASSED |
+| 9 | Recursive ancestor resolution | 4 | 4 | PASSED |
+| 10 | Recursive predicate with one solution | 1 | 1 | PASSED |
+| 11 | Infinite recursion stopped by depth limit | 0 | 0 | PASSED |
+| 12 | Left recursion with successful alternatives | 3 | 3 | PASSED |
+
+### 20.2. Overall Result
+
+The recorded execution completed with:
+
+```text
+Total passed: 12 / 12
+Exit code: 0
+```
+
+### 20.3. Individual Demonstration Mode
+
+The runner provides:
+
+```prolog
+sld_demo_runner:run_case(N).
+```
+
+This mode displays the detailed execution of one selected case.
+
+The output includes:
+
+- Case identification.
+- Query.
+- Maximum depth.
+- Expected and observed answer counts.
+- Chronological resolution trace.
+- Applied clauses.
+- Pending goals.
+- Variable bindings.
+- Successful answers.
+- Execution summary.
+- Final PASS/FAIL result.
+
+### 20.4. Combined Demonstration Mode
+
+The runner also provides:
+
+```prolog
+sld_demo_runner:run_all.
+```
+
+This mode executes all twelve cases.
+
+It displays a compact summary table containing:
+
+- Case number.
+- Scenario description.
+- Expected answers.
+- Observed answers.
+- Final result.
+
+The current `run_all` output does not display twelve complete detailed traces.
+
+To inspect a case's detailed resolution process, use `run_case(N)`.
+
+### 20.5. Verification Scope
+
+Each demonstration verifies its expected number of successful answers and variable bindings. The runner additionally checks chronological step numbering, the number of successful events, and required trace events for failure, recursion, backtracking, and depth cutoff.
+
+The four automated test suites and separate execution-evidence files provide further checks, including seven direct tests of the structured `step/8` event contract.
+
+These results cover the documented educational subset and demonstration scenarios; they do not prove correctness for arbitrary Prolog programs or establish integration with Parts B and C.
+
+---
+
+## 21. Automated Test Suites
+
+The implementation includes four automated test suites.
+
+| Suite | File | Tests | Recorded result |
+|---|---|---:|---|
+| Basic SLD engine | `tests/engine/sld_engine_tests.pl` | 14 | 14/14 passed |
+| Resolution traces | `tests/engine/sld_trace_tests.pl` | 17 | 17/17 passed |
+| Variable aliasing | `tests/engine/sld_alias_tests.pl` | 3 | 3/3 passed |
+| Structured event contract | `tests/engine/sld_step_contract_tests.pl` | 7 | 7/7 passed |
+| **Total** | **Four suites** | **41** | **41/41 passed** |
+
+### 21.1. Basic Engine Tests
+
+These tests cover the supported logical-resolution behavior.
+
+Relevant scenarios include:
+
+- Facts.
+- Rules.
+- Successful queries.
+- Unsuccessful queries.
+- Conjunctions.
 - Recursion.
-- Unification.
 - Multiple solutions.
 - Backtracking.
-- Chronological resolution tracing.
+- Depth limits.
 
-### 8.5. Infinite Recursion with Depth Control
+### 21.2. Trace Tests
 
-Command:
+These tests verify the structured resolution information.
 
-```cmd
-swipl -q -s examples/programs/recursive_loop.pl -s src/prolog/engine/sld_engine.pl -g "sld_engine:sld_trace(endless,3,Steps,Answers),findall(A,member(step(_,_,_,A,_,_,_,_),Steps),Actions),writeln(Actions),writeln(Answers),halt."
-```
+Relevant scenarios include:
 
-Observed actions:
+- Event generation.
+- Resolution paths.
+- Successful answers.
+- Variable substitutions.
+- Failed branches.
+- Backtracking.
+- Depth cutoffs.
+- Invalid depth values.
 
-```prolog
-[
-    start,
-    apply,
-    apply,
-    apply,
-    cutoff
-]
-```
+### 21.3. Variable Aliasing Tests
 
-Observed answers:
-
-```prolog
-[]
-```
-
-The resolution branch is stopped when it reaches the configured maximum depth.
-
-This prevents the individual recursive branch from expanding indefinitely.
-
-### 8.6. Conjunction with Shared Variables
-
-Command:
-
-```cmd
-swipl -q -s examples/programs/family.pl -s src/prolog/engine/sld_engine.pl -g "sld_engine:sld_trace((parent(ana,X),parent(X,Y)),2,Steps,Answers),writeln(Answers),halt."
-```
-
-The observed logical solutions are:
-
-```prolog
-X = luis,
-Y = sofia
-```
-
-And:
-
-```prolog
-X = marta,
-Y = diego
-```
-
-This example demonstrates that variable substitutions are preserved between consecutive goals within a conjunction.
-
-## 9. Automated Testing
-
-Two automated test suites were developed for Part A.
-
-| Test Suite | File | Result |
-|---|---|---|
-| Basic SLD Engine | `tests/engine/sld_engine_tests.pl` | 14/14 passed |
-| SLD Resolution Trace | `tests/engine/sld_trace_tests.pl` | 17/17 passed |
-| **Total** | Both test suites | **31/31 passed** |
-
-### 9.1. Test Execution Command
-
-The following command executes both test suites:
-
-```cmd
-swipl -q -s examples/programs/family.pl -s examples/programs/recursive_loop.pl -s tests/engine/sld_engine_tests.pl -s tests/engine/sld_trace_tests.pl -g "run_tests([sld_engine,sld_trace])" -t halt
-```
-
-### 9.2. Observed Test Result
-
-The last reported execution completed successfully.
-
-The output ended with:
+The additional tests are:
 
 ```text
-[31/31] sld_trace:noninteger_depth_rejected ... passed (0.000 sec)
+logical_unification
+aliased_variables_in_trace
+independent_variables_in_trace
 ```
 
-All 31 automated tests passed.
+Their purpose is to verify:
 
-The final reported execution did not contain the singleton-variable or residual-choicepoint warnings encountered during earlier test revisions.
+1. Logical unification.
+2. Aliased unbound variables.
+3. Independent unbound variables.
 
-### 9.3. Tested Functionalities
+### 21.4. Structured Event Contract Tests
 
-The individual tests cover:
+The seven tests in `tests/engine/sld_step_contract_tests.pl` verify that the public `step/8` interface records:
 
-1. Successful fact queries.
-2. Failed fact queries.
-3. Rule resolution.
-4. Unification.
-5. Variable substitutions.
-6. Conjunctions of goals.
-7. Recursive resolution.
-8. Multiple solutions.
-9. Backtracking.
-10. Depth-limit control.
-11. Successful terminal outcomes.
-12. Failed terminal outcomes.
-13. Depth cutoffs.
-14. Resolution step generation.
-15. Chronological event ordering.
-16. Independent alternative bindings.
-17. Stable resolution snapshots.
-18. Invalid depth values.
+1. The initial resolution event and its variable bindings.
+2. A selected fact and its applied clause.
+3. Remaining goals after unification.
+4. Applied rule clauses, including pending body goals.
+5. Logical failure events.
+6. Depth-cutoff events.
+7. Backtracking events and restored parent-state bindings.
 
-### 9.4. Scope of Testing
+Their independent execution is recorded in `docs/evidence/engine/05_step_contract_tests.txt`.
 
-These tests verify the individual functionality of Part A.
+### 21.5. Recorded Test Result
 
-They do not establish that the tree construction module developed by Roy or the web visualizer developed by Keynell has already been integrated.
+```text
+41/41 tests passed
+Exit code: 0
+```
 
-Separate integration tests must be executed when the corresponding components become available.
+### 21.6. Automated Test Evidence
 
-## 10. Known Limitations
+```text
+docs/evidence/engine/automated_tests.txt
+```
 
-The SLD resolution engine is designed for an educational subset of Prolog.
+---
 
-It is not intended to implement the complete Prolog language.
+## 22. Individual Execution Evidence
 
-The following restrictions apply:
+The evidence files are located in:
 
-### 10.1. Supported Clause Types
+```text
+docs/evidence/engine/
+```
 
-The engine supports facts and definite Horn-clause rules.
+### 22.1. Evidence for the Six Approved Commitments
 
-It does not provide complete support for all Prolog constructs.
+| Commitment | Evidence files |
+|---|---|
+| 1. Meta-interpreter | `01_meta_interpreter.txt` |
+| 2. Goal resolution and unification | `02_goal_unification.txt`, `02_variable_aliasing.txt`, `02_alias_tests.txt` |
+| 3. Recursion and backtracking | `03_backtracking.txt`, `03_recursion.txt`, `03_failed_query.txt` |
+| 4. Configurable depth control | `04_configurable_depth.txt`, `04_depth_cutoff.txt` |
+| 5. Resolution information | `05_trace_interface.txt`, `05_failure_cutoff_interface.txt`, `05_step_contract_tests.txt` |
+| 6. Individual tests | `automated_tests.txt`, `demo_12_cases_output.txt` |
 
-### 10.2. Unsupported Language Features
+### 22.2. Additional General Evidence
 
-The initial implementation does not support:
+The directory also contains:
 
-- Prolog cut (`!`) as an interpreted goal.
-- General negation-as-failure.
-- Disjunction as a separate interpreted query construct.
+```text
+basic_resolution.txt
+recursion_depth.txt
+sld_trace.txt
+```
+
+These files provide earlier verification of logical resolution, recursion, depth control, and resolution tracing.
+
+### 22.3. Evidence Inventory
+
+The complete file inventory and explanation are documented in:
+
+```text
+docs/evidence/engine/README.md
+```
+
+### 22.4. Evidence Interpretation
+
+The individual evidence files demonstrate specific functional requirements.
+
+The automated tests verify additional behavior.
+
+The twelve-case summary records expected and observed answer counts; the updated runner also validates the corresponding variable bindings and required scenario events.
+
+These evidence types complement each other.
+
+They should not be treated as interchangeable.
+
+---
+
+## 23. Reproducing the Automated Tests
+
+Open Windows CMD in the repository root.
+
+### 23.1. Execute All Tests
+
+```cmd
+swipl -q -s examples/programs/family.pl -s examples/programs/recursive_loop.pl -s examples/programs/alias_demo.pl -s src/prolog/engine/sld_engine.pl -s tests/engine/sld_engine_tests.pl -s tests/engine/sld_trace_tests.pl -s tests/engine/sld_alias_tests.pl -s tests/engine/sld_step_contract_tests.pl -g run_tests -t halt
+```
+
+### 23.2. Check the Exit Code
+
+Immediately execute:
+
+```cmd
+echo %ERRORLEVEL%
+```
+
+The recorded successful execution returned:
+
+```text
+0
+```
+
+### 23.3. Save the Test Output
+
+```cmd
+swipl -q -s examples/programs/family.pl -s examples/programs/recursive_loop.pl -s examples/programs/alias_demo.pl -s src/prolog/engine/sld_engine.pl -s tests/engine/sld_engine_tests.pl -s tests/engine/sld_trace_tests.pl -s tests/engine/sld_alias_tests.pl -s tests/engine/sld_step_contract_tests.pl -g run_tests -t halt > docs\evidence\engine\automated_tests.txt 2>&1
+```
+
+### 23.4. Verify the Final Test
+
+```cmd
+findstr /L /C:"[41/41]" docs\evidence\engine\automated_tests.txt
+```
+
+### 23.5. Inspect the Evidence
+
+```cmd
+type docs\evidence\engine\automated_tests.txt
+```
+
+The test output should be regenerated after relevant modifications to the engine.
+
+### 23.6. Reproduce the Structured Event Contract Tests
+
+```cmd
+swipl -q -s examples/programs/family.pl -s examples/programs/recursive_loop.pl -s src/prolog/engine/sld_engine.pl -s tests/engine/sld_step_contract_tests.pl -g "run_tests([sld_step_contract])" -t halt > docs\evidence\engine\05_step_contract_tests.txt 2>&1
+```
+
+Verify the exit code and inspect the seven-test evidence:
+
+```cmd
+echo %ERRORLEVEL%
+type docs\evidence\engine\05_step_contract_tests.txt
+```
+
+---
+
+## 24. Reproducing the Demonstrations
+
+### 24.1. Execute Case 7
+
+This case demonstrates conjunctions and shared variables.
+
+```cmd
+swipl -q -s examples/programs/family.pl -s examples/programs/recursive_loop.pl -s examples/queries/sld_demo_runner.pl -g "sld_demo_runner:run_case(7)" -t halt
+```
+
+### 24.2. Execute Case 8
+
+This case demonstrates backtracking after a failed alternative.
+
+```cmd
+swipl -q -s examples/programs/family.pl -s examples/programs/recursive_loop.pl -s examples/queries/sld_demo_runner.pl -g "sld_demo_runner:run_case(8)" -t halt
+```
+
+### 24.3. Execute Case 9
+
+This case demonstrates recursive ancestor resolution.
+
+```cmd
+swipl -q -s examples/programs/family.pl -s examples/programs/recursive_loop.pl -s examples/queries/sld_demo_runner.pl -g "sld_demo_runner:run_case(9)" -t halt
+```
+
+### 24.4. Execute Case 11
+
+This case demonstrates a configurable depth cutoff.
+
+```cmd
+swipl -q -s examples/programs/family.pl -s examples/programs/recursive_loop.pl -s examples/queries/sld_demo_runner.pl -g "sld_demo_runner:run_case(11)" -t halt
+```
+
+### 24.5. Execute All Twelve Cases
+
+```cmd
+swipl -q -s examples/programs/family.pl -s examples/programs/recursive_loop.pl -s examples/queries/sld_demo_runner.pl -g "sld_demo_runner:run_all" -t halt
+```
+
+### 24.6. Save the Summary Output
+
+```cmd
+swipl -q -s examples/programs/family.pl -s examples/programs/recursive_loop.pl -s examples/queries/sld_demo_runner.pl -g "sld_demo_runner:run_all" -t halt > docs\evidence\engine\demo_12_cases_output.txt 2>&1
+```
+
+### 24.7. Check the Exit Code
+
+```cmd
+echo %ERRORLEVEL%
+```
+
+### 24.8. Verify the Summary
+
+```cmd
+findstr /C:"Total passed:" docs\evidence\engine\demo_12_cases_output.txt
+```
+
+Recorded result:
+
+```text
+Total passed: 12 / 12
+```
+
+### 24.9. Inspect the Output
+
+```cmd
+type docs\evidence\engine\demo_12_cases_output.txt
+```
+
+---
+
+## 25. Known Technical Limitations
+
+The meta-interpreter supports a defined educational subset of Prolog.
+
+It is not a complete implementation of the Prolog language.
+
+### 25.1. Language Subset
+
+General support is not provided for:
+
+- Cut (`!`).
+- Negation-as-failure.
+- Disjunction.
 - Arbitrary built-in predicates.
 - General arithmetic evaluation.
+- Side-effecting operations.
 - Dynamic database modifications.
-- Arbitrary side-effecting operations.
-- Complete module-system interpretation.
+- Complete module-system behavior.
 
-### 10.3. Program Module Restriction
+### 25.2. Clause Source
 
-The engine inspects clauses in the `user` module.
+The supported program clauses are obtained from the SWI-Prolog `user` module.
 
-It does not provide a general interface for interpreting arbitrary Prolog modules.
+The engine is not designed to interpret arbitrary Prolog modules.
 
-### 10.4. Unlimited Basic Resolution
+### 25.3. Unrestricted Resolution
 
 The predicate:
 
@@ -1042,279 +2043,362 @@ The predicate:
 sld_solve/1
 ```
 
-does not enforce a depth limit.
+does not impose a configurable depth limit.
 
-An infinitely recursive branch may therefore prevent termination.
+A recursive program without a terminating base case may therefore continue indefinitely.
 
-### 10.5. Depth-Limit Behavior
+### 25.4. Depth Limits
 
-The configurable depth limit restricts the expansion of individual resolution branches.
+A configured maximum depth restricts the expansion of individual resolution branches.
 
-It does not impose a global execution-time limit or a maximum number of generated events.
+It is not a global execution-time limit.
 
-A program with many alternatives may still generate a large resolution trace.
+It does not establish a maximum number of trace events.
 
-### 10.6. Cutoff Interpretation
+### 25.5. Cutoff Semantics
 
-The result:
+A depth cutoff means that further exploration was prevented by the configured limit.
 
-```prolog
-cutoff
-```
+It does not establish that the original query is logically false.
 
-does not mean that the logical query is false.
+### 25.6. Variable Labels
 
-It means that unresolved goals remain and further expansion was prevented by the depth limit.
+The trace uses generated identifiers such as:
 
-### 10.7. Variable Naming
-
-Original query variables are represented using stable labels such as:
-
-```prolog
+```text
 V1
 V2
 V3
 ```
 
-These labels do not automatically preserve the original variable names written by the user.
+These identifiers do not necessarily preserve the original source-level variable names.
 
-### 10.8. Resolution Tree Construction
+### 25.7. Textual Snapshots
 
-Part A generates resolution information but does not construct the final tree hierarchy.
+The trace contains stable textual representations of goals, clauses, and variable values.
 
-The graphical tree structure and JSON export belong to Part B.
+These snapshots are not live Prolog variables.
 
-## 11. Integration with Part B
+The displayed variable names inside separately generated text snapshots should not be treated as globally unique variable identities.
 
-The interface proposed for integration is:
+### 25.8. Variable Aliasing
+
+The trace distinguishes the tested cases of aliased and independent unbound query variables.
+
+It does not provide a complete serialization of every possible shared-variable relationship in arbitrary nested Prolog terms.
+
+### 25.9. Tree Construction
+
+Part A does not construct the final SLD tree hierarchy.
+
+This responsibility belongs to Part B.
+
+### 25.10. JSON Export
+
+Part A does not export the completed tree as JSON.
+
+This responsibility belongs to Part B.
+
+### 25.11. Graphical Visualization
+
+Part A does not implement the browser-based visualization.
+
+This responsibility belongs to Part C.
+
+---
+
+## 26. Integration with Part B
+
+The principal public interface is:
 
 ```prolog
 sld_trace(+Query, +MaxDepth, -Steps, -Answers).
 ```
 
-Part A provides:
+It provides:
 
-1. Chronological resolution steps.
-2. Explored clause alternatives.
-3. Selected goals.
-4. Applied clauses.
-5. Remaining goals.
-6. Variable substitutions.
-7. Successful answers.
-8. Failed branches.
-9. Depth-limited branches.
-10. Backtracking events.
+- Chronological resolution events.
+- Resolution paths.
+- Depth information.
+- Selected goals.
+- Applied clauses.
+- Pending goals.
+- Variable substitutions.
+- Variable aliases.
+- Successful answers.
+- Failed branches.
+- Depth cutoffs.
+- Backtracking events.
 
-### 11.1. Responsibilities of Part B
+### 26.1. Integration Requirements
 
-Roy's module will consume the information generated by Part A.
+Roy's component must correctly handle:
 
-It will be responsible for:
+1. `step/8` event fields.
+2. `answer/2` records.
+3. `binding/2` records.
+4. Chronological event ordering.
+5. Root and branch paths.
+6. Resolution depth.
+7. Applied clauses.
+8. Remaining goals.
+9. Successful outcomes.
+10. Failed outcomes.
+11. Depth cutoffs.
+12. Backtracking.
+13. Concrete substitutions.
+14. Unbound-variable markers.
+15. Alias references.
 
-- Constructing the SLD tree hierarchy.
-- Creating node identifiers.
-- Establishing parent-child relationships.
-- Associating clauses and substitutions with nodes.
-- Representing successful, failed, and depth-limited branches.
-- Exporting the resulting tree to JSON.
+### 26.2. Alias Compatibility
 
-Part B must not reimplement the logical resolution performed by Part A.
+The binding structure remains:
 
-### 11.2. Responsibilities of Part C
+```prolog
+binding(VariableName, Value).
+```
 
-Keynell's module will consume the JSON generated by Part B.
-
-It will be responsible for:
-
-- Rendering the SLD tree in the browser.
-- Displaying nodes and connections.
-- Showing goals and applied clauses.
-- Displaying substitutions.
-- Distinguishing successful and failed branches.
-- Supporting node-detail inspection.
-
-### 11.3. Pending Integration Validation
-
-Before the integration contract is considered final, Emmanuel and Roy must validate:
-
-1. The public `sld_trace/4` signature.
-2. The exact `step/8` representation.
-3. The interpretation of resolution paths.
-4. Chronological event numbering.
-5. Variable substitutions.
-6. The `answer(Path, Bindings)` representation.
-7. Success, failure, cutoff, and backtracking behavior.
-8. The information required to reconstruct the resolution tree.
-9. A shared integration test.
-
-The proposed contract is documented in:
+The value may include:
 
 ```text
-docs/ENGINE_INTERFACE.md
+alias(V1)
 ```
 
-Once Part B is available, the team must execute and document a real integration test.
+Roy's consumer must preserve that information.
 
-No completed integration with Part B or Part C is claimed at this stage.
+### 26.3. Tree Construction
 
-## 12. Individual Demonstration Guide
+Part B is responsible for using the recorded information to construct:
 
-The following sequence is recommended for Emmanuel's individual demonstration.
+- Tree nodes.
+- Parent-child relationships.
+- Alternative branches.
+- Terminal branches.
+- Node metadata.
 
-### Step 1. Introduce the Contribution
+### 26.4. JSON Export
 
-Explain that Part A implements the logical resolution engine.
+Part B is responsible for exporting the constructed tree as JSON.
 
-Clarify that tree construction and graphical visualization belong to the other team members.
+The complete JSON schema is not defined by Part A.
 
-### Step 2. Present the Public Predicates
+### 26.5. Integration Verification
 
-Show:
+The actual integration must be tested using Roy's implementation.
 
-```prolog
-sld_solve/1
-sld_solve_limited/3
-sld_trace/4
-```
+The individual Part A tests do not establish that this integration has already been completed.
 
-Explain the purpose of each predicate.
+---
 
-### Step 3. Demonstrate Fact Resolution
+## 27. Individual Technical Demonstration
 
-Execute:
+Emmanuel must be able to explain and demonstrate his own component independently.
 
-```prolog
-parent(ana, X)
-```
+### 27.1. Concepts to Explain
 
-Explain why the query has two solutions.
+1. What a meta-interpreter is.
+2. What SLD resolution means.
+3. What facts and rules are.
+4. How leftmost-goal selection works.
+5. How clauses are selected.
+6. How unification works.
+7. How variable substitutions propagate.
+8. How conjunctions are resolved.
+9. How recursive rules are processed.
+10. How backtracking explores alternatives.
+11. How multiple solutions are produced.
+12. How unsuccessful queries are recognized.
+13. How configurable depth limits work.
+14. Why failure and cutoff are different.
+15. How variable aliasing is represented.
+16. How resolution events are generated.
+17. What `step/8` contains.
+18. What `answer/2` contains.
+19. What information is provided to Part B.
+20. What limitations the engine has.
 
-### Step 4. Demonstrate Failed Resolution
+### 27.2. Recommended Demonstration Scenarios
 
-Execute:
+| Demonstration | Main concept |
+|---|---|
+| Meta-interpreter evidence | Facts and rules. |
+| Case 7 | Conjunctions and shared variables. |
+| Aliasing evidence | Shared unbound variables. |
+| Case 8 | Backtracking after failure. |
+| Case 9 | Recursive resolution. |
+| Case 4 | Unsuccessful query. |
+| Case 11 | Configurable depth control. |
+| Trace evidence | Structured resolution events. |
+| 41 automated tests | Regression verification across four suites. |
+| Seven `step/8` contract tests | Selected goals, applied clauses, pending goals, bindings, failure, cutoff, and backtracking. |
+| 12 demonstration cases | Complete demonstration summary. |
 
-```prolog
-parent(diego, X)
-```
+### 27.3. Expected Technical Questions
 
-Explain why no applicable clause satisfies the query.
+#### What does the meta-interpreter do?
 
-### Step 5. Demonstrate Recursive Resolution
+It resolves supported Prolog queries by selecting goals, applying facts or rules, performing unification, and exploring alternatives.
 
-Execute:
+#### What is unification?
 
-```prolog
-ancestor(ana, X)
-```
+Unification makes two compatible Prolog terms identical through variable substitutions.
 
-Explain how recursive rules generate additional solutions.
+#### How does the engine select goals?
 
-### Step 6. Demonstrate Depth Control
+It selects the leftmost pending goal.
 
-Execute:
+#### How are rules resolved?
 
-```prolog
-endless
-```
+The selected goal is unified with a rule head, and the rule body replaces that goal.
 
-using a configured depth limit.
+#### What is backtracking?
 
-Explain why the branch produces `cutoff` instead of running indefinitely.
+Backtracking allows Prolog to return to an earlier state and explore another applicable clause.
 
-### Step 7. Demonstrate Variable Substitutions
+#### How does the engine obtain multiple solutions?
 
-Execute:
+It explores alternative resolution branches through Prolog backtracking.
 
-```prolog
-(parent(ana, X), parent(X, Y))
-```
+#### What is a depth cutoff?
 
-Explain how substitutions are shared between the goals.
+It indicates that the configured depth limit prevented further exploration of an unresolved branch.
 
-### Step 8. Demonstrate Resolution Tracing
+#### Is a cutoff the same as logical failure?
 
-Show the generated:
+No. A cutoff does not prove that the query is false.
 
-```prolog
-step/8
-```
+#### How does the engine represent variable aliasing?
 
-and:
+It records an alias reference such as `alias(V1)` when tracked unbound query variables refer to the same logical variable.
 
-```prolog
-answer/2
-```
+#### What information does Part B receive?
 
-structures.
+Part B receives chronological `step/8` events and successful `answer/2` records through `sld_trace/4`.
 
-Explain how the information can be consumed by Roy's tree construction module.
+#### What is Emmanuel's individual contribution?
 
-### Step 9. Execute Automated Tests
+The SLD logical resolution engine, its tests, documentation, execution evidence, and individual demonstration.
 
-Run the complete test command and explain the results obtained during the demonstration.
+### 27.4. Demonstration Guide
 
-The test output should be preserved as execution evidence.
-
-## 13. Current Status and Remaining Deliverables
-
-### 13.1. Completed Work
-
-The following elements of Part A have been implemented:
-
-- Basic SLD meta-interpreter.
-- Resolution of facts.
-- Resolution of definite Horn-clause rules.
-- Leftmost goal selection.
-- Unification.
-- Conjunction handling.
-- Recursive resolution.
-- Backtracking.
-- Multiple solutions.
-- Failed resolution detection.
-- Configurable depth limit.
-- Success, failure, and cutoff outcomes.
-- Chronological resolution trace generation.
-- Stable variable substitutions.
-- Clause alternative tracking.
-- Answer-path association.
-- Automated engine tests.
-- Automated trace tests.
-- Proposed integration contract.
-
-The latest reported test execution completed successfully with:
+The complete practical demonstration procedure is documented in:
 
 ```text
-31/31 tests passed
+docs/ENGINE_DEMO.md
 ```
 
-The implementation and tests have been committed and pushed to:
+---
+
+## 28. Current Verification Status
+
+### 28.1. Verified Functionality
+
+| Functionality | Recorded status |
+|---|---|
+| SLD meta-interpreter | Implemented and tested |
+| Fact resolution | Verified |
+| Rule resolution | Verified |
+| Leftmost-goal selection | Verified through Part A tests and traces |
+| Unification | Verified |
+| Conjunctions | Verified |
+| Shared substitutions | Verified |
+| Variable aliasing | Verified |
+| Independent unbound variables | Verified |
+| Recursive resolution | Verified |
+| Backtracking | Verified |
+| Multiple solutions | Verified |
+| Unsuccessful queries | Verified |
+| Configurable depth control | Verified |
+| Depth cutoffs | Verified |
+| Structured resolution events | Verified |
+| Successful-answer records | Verified |
+| Failure events | Verified |
+| Cutoff events | Verified |
+| Structured event contract tests | **7/7 passed** |
+| Automated tests | **41/41 passed** |
+| Demonstration cases | **12/12 passed** |
+| Automated test exit code | **0** |
+| Demonstration exit code | **0** |
+| Organized console output | Verified |
+| Individual execution evidence | Generated |
+
+### 28.2. Repository Status
+
+The original engine implementation was integrated into `main` through:
 
 ```text
-feature/sld-meta-interpreter
+Pull request #2
+Merge commit: d8a1117
 ```
 
-### 13.2. Remaining Work
+The additional evidence and demonstration improvements were developed on:
 
-Before Part A is considered fully completed, the following activities remain:
+```text
+feature/engine-demo-evidence
+```
 
-1. Verify this technical documentation against the final engine implementation.
-2. Collect and organize reproducible execution evidence.
-3. Prepare the individual technical demonstration.
-4. Validate the integration interface with Roy.
-5. Execute shared integration tests when Part B is available.
-6. Repeat the automated tests before final integration.
-7. Review the final changes through the project's pull-request workflow.
+The original merge does not establish that all subsequent changes have already been integrated into `main`.
 
-### 13.3. Final Responsibility Statement
+### 28.3. Remaining Verification
 
-This document describes the individual contribution of Emmanuel Nunez Jimenez to the approved SLD Resolution Tree Visualizer project.
+The following activities remain relevant before declaring the individual contribution fully ready for final delivery:
 
-The contribution focuses on implementing the SLD meta-interpreter and logical resolution engine in SWI-Prolog.
+1. Review consistency between the source code and updated documentation.
+2. Review the final demonstration instructions.
+3. Review the main project README.
+4. Confirm that all required execution-evidence files are included.
+5. Verify the final staged Git changes.
+6. Commit and publish the validated changes.
+7. Prepare the individual technical explanation.
+8. Practice the individual demonstration.
+9. Verify the actual Part A-B integration when Roy's component is available.
 
-It includes goal resolution, unification, recursion, backtracking, depth control, resolution tracing, and individual testing.
+The SLD tree hierarchy and JSON export remain Roy's responsibility.
 
-The construction and JSON export of the SLD resolution tree belong to Roy Arias Mejia.
+The browser visualization remains Keynell's responsibility.
 
-The graphical visualization belongs to Keynell Molina Mora.
+---
 
-This separation preserves the individual responsibilities established in the proposal approved by instructor Carlos Loria-Saenz.
+## 29. Final Technical Statement
+
+The SLD meta-interpreter developed by Emmanuel Núñez Jiménez implements logical resolution for a defined educational subset of Prolog.
+
+The engine:
+
+- Processes facts and rules.
+- Selects pending goals.
+- Performs unification.
+- Maintains variable substitutions.
+- Resolves conjunctions.
+- Handles recursive rules.
+- Explores alternatives through backtracking.
+- Produces multiple successful answers.
+- Recognizes unsuccessful queries.
+- Applies configurable resolution-depth limits.
+- Records structured resolution events.
+- Preserves the tested alias relationships between tracked unbound query variables.
+- Provides successful-answer information for the tree-building component.
+
+The recorded automated verification completed with:
+
+```text
+41/41 tests passed
+Exit code: 0
+```
+
+The recorded demonstration verification completed with:
+
+```text
+12/12 demonstration cases passed
+Exit code: 0
+```
+
+Separate execution-evidence files support the six approved individual commitments.
+
+The implementation and documentation provide the technical foundation for Emmanuel's individual demonstration and defense.
+
+These results do not establish that the complete three-component SLD Resolution Tree Visualizer has already been integrated.
+
+The integration must preserve the approved individual responsibilities of Emmanuel Núñez Jiménez, Roy Arias Mejía, and Keynell Molina Mora.
+
+The development and verification presented here correspond specifically to Emmanuel's approved Part A contribution.

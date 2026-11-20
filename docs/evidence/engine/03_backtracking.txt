@@ -1,0 +1,98 @@
+
+======================================================================
+  SLD RESOLUTION ENGINE - PART A
+======================================================================
+
+  CASE 8: Backtracking after a failed alternative
+
+  Query          : parent(ana,A),parent(A,diego)
+  Maximum depth  : 2
+  Expected       : 1 solution(s)
+  Actual         : 1 solution(s)
+
+======================================================================
+  RESOLUTION TRACE
+======================================================================
+
+  Total recorded events: 7
+
+  STEP 1 | start
+  --------------------------------------------------------------------
+  Path           : []
+  Depth          : 0
+  Selected goal  : parent(ana,A),parent(A,diego)
+  Bindings       : V1=_
+
+  STEP 2 | apply
+  --------------------------------------------------------------------
+  Path           : [1]
+  Depth          : 1
+  Selected goal  : parent(ana,A)
+  Applied clause : parent(ana,luis)
+  Remaining goals: [parent(luis,diego)]
+  Bindings       : V1=luis
+
+  STEP 3 | failure
+  --------------------------------------------------------------------
+  Path           : [1]
+  Depth          : 1
+  Selected goal  : parent(luis,diego)
+  Failed goals   : [parent(luis,diego)]
+  Bindings       : V1=luis
+
+  STEP 4 | backtrack
+  --------------------------------------------------------------------
+  Path           : []
+  Depth          : 0
+  Selected goal  : parent(ana,A)
+  Bindings       : V1=_
+
+  STEP 5 | apply
+  --------------------------------------------------------------------
+  Path           : [2]
+  Depth          : 1
+  Selected goal  : parent(ana,A)
+  Applied clause : parent(ana,marta)
+  Remaining goals: [parent(marta,diego)]
+  Bindings       : V1=marta
+
+  STEP 6 | apply
+  --------------------------------------------------------------------
+  Path           : [2,1]
+  Depth          : 2
+  Selected goal  : parent(marta,diego)
+  Applied clause : parent(marta,diego)
+  Remaining goals: []
+  Bindings       : V1=marta
+
+  STEP 7 | success
+  --------------------------------------------------------------------
+  Path           : [2,1]
+  Depth          : 2
+  Selected goal  : none
+  Bindings       : V1=marta
+
+======================================================================
+  SUCCESSFUL ANSWERS
+======================================================================
+
+ No. | Path           | Variable bindings
+-----+----------------+------------------------------------------
+ 1   | [2,1]          | V1=marta
+
+======================================================================
+  EXECUTION SUMMARY
+======================================================================
+
+  Recorded steps       : 7
+  Successful answers   : 1
+  Successful branches  : 1
+  Failed branches      : 1
+  Depth cutoffs        : 0
+  Backtracking events  : 1
+
+======================================================================
+  FINAL RESULT
+======================================================================
+
+  RESULT: PASSED

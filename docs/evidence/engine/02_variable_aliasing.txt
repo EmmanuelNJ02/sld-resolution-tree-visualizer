@@ -1,0 +1,5 @@
+
+=== VARIABLE UNIFICATION ===
+
+Aliased variables     : [binding("V1","_"),binding("V2","alias(V1)")]
+Independent variables : [binding("V1","_"),binding("V2","_")]

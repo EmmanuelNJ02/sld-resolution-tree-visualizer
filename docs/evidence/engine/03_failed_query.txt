@@ -1,0 +1,57 @@
+
+======================================================================
+  SLD RESOLUTION ENGINE - PART A
+======================================================================
+
+  CASE 4: Failed fact query
+
+  Query          : parent(diego,A)
+  Maximum depth  : 1
+  Expected       : 0 solution(s)
+  Actual         : 0 solution(s)
+
+======================================================================
+  RESOLUTION TRACE
+======================================================================
+
+  Total recorded events: 2
+
+  STEP 1 | start
+  --------------------------------------------------------------------
+  Path           : []
+  Depth          : 0
+  Selected goal  : parent(diego,A)
+  Bindings       : V1=_
+
+  STEP 2 | failure
+  --------------------------------------------------------------------
+  Path           : []
+  Depth          : 0
+  Selected goal  : parent(diego,A)
+  Failed goals   : [parent(diego,A)]
+  Bindings       : V1=_
+
+======================================================================
+  SUCCESSFUL ANSWERS
+======================================================================
+
+  No successful answers were found.
+  Review the resolution trace to distinguish
+  logical failure from depth cutoff.
+
+======================================================================
+  EXECUTION SUMMARY
+======================================================================
+
+  Recorded steps       : 2
+  Successful answers   : 0
+  Successful branches  : 0
+  Failed branches      : 1
+  Depth cutoffs        : 0
+  Backtracking events  : 0
+
+======================================================================
+  FINAL RESULT
+======================================================================
+
+  RESULT: PASSED
