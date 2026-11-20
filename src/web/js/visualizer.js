@@ -1,8 +1,6 @@
 "use strict";
 
 const fileInput = document.querySelector("#json-file");
-const exampleSelect = document.querySelector("#example-select");
-const loadExampleButton = document.querySelector("#load-example");
 const loadMessage = document.querySelector("#load-message");
 const treeSection = document.querySelector("#tree-section");
 const treeTitle = document.querySelector("#tree-title");
@@ -37,25 +35,6 @@ fileInput.addEventListener("change", async () => {
       : error.message, true);
   } finally {
     fileInput.value = "";
-  }
-});
-
-loadExampleButton.addEventListener("click", async () => {
-  const example = exampleSelect.value;
-  if (!example) {
-    setMessage("Selecciona un ejemplo antes de cargarlo.", true);
-    return;
-  }
-
-  try {
-    const response = await fetch(`../../examples/json/${encodeURIComponent(example)}.json`);
-    if (!response.ok) {
-      throw new Error(`No se pudo cargar el ejemplo (HTTP ${response.status}).`);
-    }
-    renderTree(await response.json());
-    setMessage(`Ejemplo cargado: ${example}.json`);
-  } catch (error) {
-    setMessage(`${error.message} Si abriste la página como archivo, inicia un servidor local o carga el JSON manualmente.`, true);
   }
 });
 
