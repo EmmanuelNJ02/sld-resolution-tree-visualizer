@@ -257,9 +257,7 @@ Part C is responsible for:
 9. Developing visualization tests.
 10. Demonstrating and defending the component.
 
-**Implementation and browser verification:** The initial visualizer is available in `src/web/`. It loaded all six bundled Part B JSON examples in a browser; node counts, status labels, tree connections, and node-detail selection were checked. Start a local server from the repository root with `python -m http.server 8000`, then open `http://localhost:8000/src/web/`. See [docs/WEB_VISUALIZER.md](docs/WEB_VISUALIZER.md) for usage and limitations.
-
-**Integration status:** This verifies the browser UI against the bundled JSON fixtures, not a fresh export from the newest Part A engine through Part B.
+**Verification status:** The integrated browser visualization has not been established by the available Part A evidence.
 
 ### 4.4. Individual Contribution Boundaries
 
@@ -1291,7 +1289,7 @@ A final presentation rehearsal and code-to-documentation consistency review are 
 
 ### 24.3. Part C - Keynell Molina Mora
 
-- [x] Browser visualizer loads all six bundled JSON examples; node counts, status labels, connections, and node-detail selection were manually verified.
+- [ ] Browser visualization verified in the available evidence.
 - [ ] Actual Part B-C integration verified.
 
 ### 24.4. Complete Project
