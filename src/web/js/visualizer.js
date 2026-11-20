@@ -1,298 +1,198 @@
 "use strict";
 
+const $ = id => document.querySelector(`#${id}`);
+
 const dom = Object.freeze({
-  fileInput: document.querySelector("#json-file"),
-  loadMessage: document.querySelector("#load-message"),
-  treeSection: document.querySelector("#tree-section"),
-  treeTitle: document.querySelector("#tree-title"),
-  treeSummary: document.querySelector("#tree-summary"),
-  treeRoot: document.querySelector("#tree-root"),
-  treeCanvas: document.querySelector("#tree-canvas"),
-  treeConnections: document.querySelector("#tree-connections"),
-  nodeDetails: document.querySelector("#node-details")
+  fileInput: $("json-file"), loadMessage: $("load-message"),
+  treeSection: $("tree-section"), treeTitle: $("tree-title"),
+  treeSummary: $("tree-summary"), treeRoot: $("tree-root"),
+  treeCanvas: $("tree-canvas"), treeConnections: $("tree-connections"),
+  nodeDetails: $("node-details")
 });
 
-const medidas = Object.freeze({
-  anchoNodo: 290,
-  espacioHorizontal: 32,
-  espacioVertical: 48
-});
-
-const svgNamespace = "http://www.w3.org/2000/svg";
+const medidas = Object.freeze({ anchoNodo: 290, espacioHorizontal: 32, espacioVertical: 48 });
 
 const etiquetasEstado = Object.freeze({
-  success: "Éxito",
-  failure: "Fallo",
-  cutoff: "Límite alcanzado"
+  success: "Éxito", failure: "Fallo", cutoff: "Límite alcanzado"
 });
 
 const pipe = (...fns) => entrada => fns.reduce((valor, fn) => fn(valor), entrada);
-
 const range = n => Array.from({ length: n }, (_, i) => i);
-
 const maximo = valores => valores.reduce((max, v) => Math.max(max, v), -Infinity);
 
 const esTexto = valor => typeof valor === "string";
 const esEnteroNoNegativo = valor => Number.isInteger(valor) && valor >= 0;
-
 const nuloO = pred => valor => valor === null || pred(valor);
 const listaDe = pred => valor => Array.isArray(valor) && valor.every(pred);
-
-const esBinding = binding =>
-  Boolean(binding) && esTexto(binding.var) && esTexto(binding.value);
-
-const esEstado = estado => Object.prototype.hasOwnProperty.call(etiquetasEstado, estado);
-
-const textoBinding = binding => `${binding.var} = ${binding.value}`;
+const esBinding = b => Boolean(b) && esTexto(b.var) && esTexto(b.value);
+const textoBinding = b => `${b.var} = ${b.value}`;
 
 const Ok = value => Object.freeze({ isOk: true, value });
 const Err = error => Object.freeze({ isOk: false, error });
-
 const chain = fn => resultado => (resultado.isOk ? fn(resultado.value) : resultado);
+const verificar = (pred, mensaje) => valor => (pred(valor) ? Ok(valor) : Err(mensaje));
+const primerError = (mensajes, valor) => (mensajes.length > 0 ? Err(mensajes[0]) : Ok(valor));
 
-const verificar = (pred, mensaje) => valor =>
-  (pred(valor) ? Ok(valor) : Err(mensaje));
-
-const primerError = (mensajes, valor) =>
-  (mensajes.length > 0 ? Err(mensajes[0]) : Ok(valor));
-
-const esObjeto = data =>
-  Boolean(data) && typeof data === "object" && !Array.isArray(data);
-
-const tieneEncabezado = data =>
-  esTexto(data.query) &&
-  esEnteroNoNegativo(data.maxDepth) &&
-  Array.isArray(data.nodes) && data.nodes.length > 0 &&
-  Array.isArray(data.answers);
+const camposNodo = Object.freeze({
+  id: v => esTexto(v) && v.length > 0,
+  parent: nuloO(esTexto),
+  depth: esEnteroNoNegativo,
+  goal: esTexto,
+  clause: nuloO(esTexto),
+  pending: listaDe(esTexto),
+  bindings: listaDe(esBinding),
+  status: v => Object.prototype.hasOwnProperty.call(etiquetasEstado, v),
+  children: listaDe(esTexto)
+});
 
 const esNodoValido = nodo =>
-  Boolean(nodo) &&
-  esTexto(nodo.id) && nodo.id.length > 0 &&
-  nuloO(esTexto)(nodo.parent) &&
-  esEnteroNoNegativo(nodo.depth) &&
-  esTexto(nodo.goal) &&
-  nuloO(esTexto)(nodo.clause) &&
-  listaDe(esTexto)(nodo.pending) &&
-  listaDe(esBinding)(nodo.bindings) &&
-  esEstado(nodo.status) &&
-  listaDe(esTexto)(nodo.children);
+  Boolean(nodo) && Object.entries(camposNodo).every(([campo, pred]) => pred(nodo[campo]));
+
+const esEncabezadoValido = d =>
+  esTexto(d.query) && esEnteroNoNegativo(d.maxDepth) &&
+  Array.isArray(d.nodes) && d.nodes.length > 0 && Array.isArray(d.answers);
 
 const erroresDeNodo = ids => (nodo, i) =>
-  !esNodoValido(nodo)
-    ? ["Uno o más nodos tienen campos inválidos."]
-    : ids.indexOf(nodo.id) !== i
-      ? [`El identificador de nodo ${nodo.id} está repetido.`]
+  !esNodoValido(nodo) ? ["Uno o más nodos tienen campos inválidos."]
+    : ids.indexOf(nodo.id) !== i ? [`El identificador de nodo ${nodo.id} está repetido.`]
       : [];
 
-const verificarNodos = data =>
-  primerError(data.nodes.flatMap(erroresDeNodo(data.nodes.map(nodo => nodo && nodo.id))), data);
-
-const indexarNodos = data =>
-  Ok({ data, nodosPorId: new Map(data.nodes.map(nodo => [nodo.id, nodo])) });
-
-const buscarRaiz = arbol => {
-  const raices = arbol.data.nodes.filter(nodo => nodo.parent === null);
-  return raices.length === 1 && raices[0] === arbol.data.nodes[0]
-    ? Ok({ ...arbol, raiz: raices[0] })
-    : Err("El árbol debe tener una única raíz, ubicada al inicio de nodes.");
+const erroresDeEnlace = porId => nodo => {
+  const padre = porId.get(nodo.parent);
+  return [
+    ...(nodo.parent !== null && !(padre && padre.children.includes(nodo.id))
+      ? [`La relación padre-hijo de ${nodo.id} no es válida.`] : []),
+    ...nodo.children
+      .filter(id => !porId.has(id) || porId.get(id).parent !== nodo.id)
+      .map(id => `La conexión de ${nodo.id} hacia ${id} no es válida.`)
+  ];
 };
 
-const erroresDeEnlace = nodosPorId => nodo => {
-  const padre = nodo.parent === null ? null : nodosPorId.get(nodo.parent);
-  const errorPadre =
-    nodo.parent !== null && (!padre || !padre.children.includes(nodo.id))
-      ? [`La relación padre-hijo de ${nodo.id} no es válida.`]
-      : [];
-  const erroresHijos = nodo.children
-    .filter(idHijo => {
-      const hijo = nodosPorId.get(idHijo);
-      return !hijo || hijo.parent !== nodo.id;
-    })
-    .map(idHijo => `La conexión de ${nodo.id} hacia ${idHijo} no es válida.`);
-  return [...errorPadre, ...erroresHijos];
+const esRespuestaValida = porId => r => {
+  const nodo = r && porId.get(r.node);
+  return Boolean(nodo) && nodo.status === "success" && listaDe(esBinding)(r.bindings);
 };
 
-const verificarEnlaces = arbol =>
-  primerError(arbol.data.nodes.flatMap(erroresDeEnlace(arbol.nodosPorId)), arbol);
-
-const esRespuestaValida = nodosPorId => respuesta => {
-  const nodo = respuesta && nodosPorId.get(respuesta.node);
-  return Boolean(nodo) && nodo.status === "success" && listaDe(esBinding)(respuesta.bindings);
-};
-
-const verificarRespuestas = arbol =>
-  verificar(
-    a => a.data.answers.every(esRespuestaValida(a.nodosPorId)),
-    "Una respuesta apunta a un nodo inexistente o no exitoso."
-  )(arbol);
-
-const visitar = nodosPorId => (id, visitados) =>
-  visitados.includes(id)
+const visitar = porId => (id, vistos) =>
+  vistos.includes(id)
     ? Err("El árbol contiene una conexión circular.")
-    : nodosPorId.get(id).children.reduce(
-        (resultado, idHijo) => chain(vistos => visitar(nodosPorId)(idHijo, vistos))(resultado),
-        Ok([...visitados, id])
-      );
+    : porId.get(id).children.reduce(
+        (res, hijo) => chain(v => visitar(porId)(hijo, v))(res), Ok([...vistos, id]));
 
-const verificarAlcanzables = arbol =>
-  chain(visitados => (visitados.length === arbol.data.nodes.length
-    ? Ok(arbol)
-    : Err("Hay nodos que no pertenecen a la raíz del árbol.")))(visitar(arbol.nodosPorId)(arbol.raiz.id, []));
+const verificarAlcanzables = a =>
+  chain(vistos => (vistos.length === a.data.nodes.length
+    ? Ok(a)
+    : Err("Hay nodos que no pertenecen a la raíz del árbol.")))(visitar(a.nodosPorId)(a.raiz.id, []));
 
 const validarArbol = data =>
   pipe(
-    chain(verificar(esObjeto, "El archivo debe contener un objeto JSON.")),
-    chain(verificar(tieneEncabezado, "El JSON no cumple el formato de árbol SLD esperado.")),
-    chain(verificarNodos),
-    chain(indexarNodos),
-    chain(buscarRaiz),
-    chain(verificarEnlaces),
-    chain(verificarRespuestas),
+    chain(verificar(d => Boolean(d) && typeof d === "object" && !Array.isArray(d),
+      "El archivo debe contener un objeto JSON.")),
+    chain(verificar(esEncabezadoValido, "El JSON no cumple el formato de árbol SLD esperado.")),
+    chain(d => primerError(d.nodes.flatMap(erroresDeNodo(d.nodes.map(n => n && n.id))), d)),
+    chain(d => {
+      const raices = d.nodes.filter(n => n.parent === null);
+      return raices.length === 1 && raices[0] === d.nodes[0]
+        ? Ok({ data: d, nodosPorId: new Map(d.nodes.map(n => [n.id, n])), raiz: raices[0] })
+        : Err("El árbol debe tener una única raíz, ubicada al inicio de nodes.");
+    }),
+    chain(a => primerError(a.data.nodes.flatMap(erroresDeEnlace(a.nodosPorId)), a)),
+    chain(verificar(a => a.data.answers.every(esRespuestaValida(a.nodosPorId)),
+      "Una respuesta apunta a un nodo inexistente o no exitoso.")),
     chain(verificarAlcanzables)
   )(Ok(data));
 
-const ubicarNodo = nodosPorId => (nodo, siguienteHoja) => {
+const ubicarNodo = porId => (nodo, hoja) => {
   if (nodo.children.length === 0) {
-    const centro = medidas.anchoNodo / 2 + siguienteHoja * (medidas.anchoNodo + medidas.espacioHorizontal);
-    return { centro, siguienteHoja: siguienteHoja + 1, pares: [[nodo.id, centro]] };
+    const centro = medidas.anchoNodo / 2 + hoja * (medidas.anchoNodo + medidas.espacioHorizontal);
+    return { centro, hoja: hoja + 1, pares: [[nodo.id, centro]] };
   }
-
-  const hijos = nodo.children.reduce(
-    (acc, idHijo) => {
-      const ubicado = ubicarNodo(nodosPorId)(nodosPorId.get(idHijo), acc.siguienteHoja);
-      return {
-        siguienteHoja: ubicado.siguienteHoja,
-        centros: [...acc.centros, ubicado.centro],
-        pares: [...acc.pares, ...ubicado.pares]
-      };
-    },
-    { siguienteHoja, centros: [], pares: [] }
-  );
-
+  const hijos = nodo.children.reduce((acc, id) => {
+    const h = ubicarNodo(porId)(porId.get(id), acc.hoja);
+    return { hoja: h.hoja, centros: [...acc.centros, h.centro], pares: [...acc.pares, ...h.pares] };
+  }, { hoja, centros: [], pares: [] });
   const centro = (hijos.centros[0] + hijos.centros[hijos.centros.length - 1]) / 2;
-  return { centro, siguienteHoja: hijos.siguienteHoja, pares: [...hijos.pares, [nodo.id, centro]] };
+  return { centro, hoja: hijos.hoja, pares: [...hijos.pares, [nodo.id, centro]] };
 };
 
-const calcularPosiciones = (raiz, nodosPorId) => {
-  const { siguienteHoja, pares } = ubicarNodo(nodosPorId)(raiz, 0);
-  const ancho = Math.max(
-    medidas.anchoNodo,
-    siguienteHoja * medidas.anchoNodo + (siguienteHoja - 1) * medidas.espacioHorizontal
-  );
+const calcularPosiciones = (raiz, porId) => {
+  const { hoja, pares } = ubicarNodo(porId)(raiz, 0);
+  const { anchoNodo, espacioHorizontal } = medidas;
+  const ancho = Math.max(anchoNodo, hoja * anchoNodo + (hoja - 1) * espacioHorizontal);
   return { centros: new Map(pares), ancho };
 };
 
-const alturasPorNivel = (mediciones, nivelMaximo) =>
-  range(nivelMaximo + 1).map(nivel =>
-    maximo(mediciones.filter(m => m.nivel === nivel).map(m => m.alto)));
-
 const topesPorNivel = alturas =>
-  alturas.slice(1).reduce(
-    (topes, _, i) => [...topes, topes[i] + alturas[i] + medidas.espacioVertical],
-    [0]
-  );
+  alturas.slice(1).reduce((t, _, i) => [...t, t[i] + alturas[i] + medidas.espacioVertical], [0]);
 
-const segmentosDeConexion = ({ centroPadre, basePadre, topeHijos, centrosHijos }) => {
-  const yRama = basePadre + (topeHijos - basePadre) / 2;
-  const barra = centrosHijos.length > 1
-    ? [[Math.min(...centrosHijos), yRama, Math.max(...centrosHijos), yRama]]
-    : [];
+const segmentosDeConexion = (x, y1, y2, xs) => {
+  const yRama = y1 + (y2 - y1) / 2;
   return [
-    [centroPadre, basePadre, centroPadre, yRama],
-    ...barra,
-    ...centrosHijos.map(c => [c, yRama, c, topeHijos])
+    [x, y1, x, yRama],
+    ...(xs.length > 1 ? [[Math.min(...xs), yRama, Math.max(...xs), yRama]] : []),
+    ...xs.map(c => [c, yRama, c, y2])
   ];
 };
 
 const el = (tag, { className, text, attrs = {}, dataset = {}, on = {} } = {}, hijos = []) => {
-  const elemento = document.createElement(tag);
-  if (className) elemento.className = className;
-  if (text !== undefined) elemento.textContent = String(text);
-  Object.entries(dataset).forEach(([clave, valor]) => { elemento.dataset[clave] = valor; });
-  Object.entries(attrs).forEach(([clave, valor]) => elemento.setAttribute(clave, valor));
-  Object.entries(on).forEach(([evento, manejador]) => elemento.addEventListener(evento, manejador));
-  elemento.append(...hijos);
-  return elemento;
+  const e = document.createElement(tag);
+  if (className) e.className = className;
+  if (text !== undefined) e.textContent = String(text);
+  Object.entries(dataset).forEach(([k, v]) => { e.dataset[k] = v; });
+  Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+  Object.entries(on).forEach(([k, v]) => e.addEventListener(k, v));
+  e.append(...hijos);
+  return e;
 };
 
-const lineaSvg = ([x1, y1, x2, y2]) => {
-  const linea = document.createElementNS(svgNamespace, "line");
-  [["x1", x1], ["y1", y1], ["x2", x2], ["y2", y2], ["class", "tree-connection"]]
-    .forEach(([nombre, valor]) => linea.setAttribute(nombre, String(valor)));
+const lineaSvg = coords => {
+  const linea = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  ["x1", "y1", "x2", "y2"].forEach((k, i) => linea.setAttribute(k, String(coords[i])));
+  linea.setAttribute("class", "tree-connection");
   return linea;
 };
 
-const itemResumen = (etiqueta, valor) =>
-  el("span", { className: "summary-item" }, [
-    document.createTextNode(`${etiqueta}: `),
-    el("strong", { text: valor })
-  ]);
-
-const etiquetaCampo = etiqueta => el("span", { className: "node-field__label", text: etiqueta });
-
-const campoNodo = (etiqueta, valor) =>
-  el("div", { className: "node-field" }, [etiquetaCampo(etiqueta), el("code", { text: valor })]);
-
-const listaNodo = (etiqueta, valores) =>
-  el("div", { className: "node-field" }, [
-    etiquetaCampo(etiqueta),
-    el("ul", {}, valores.map(valor => el("li", { text: valor })))
-  ]);
-
-const campoBindings = bindings =>
-  el("div", { className: "node-field" }, [
-    etiquetaCampo("Sustituciones"),
-    ...bindings.map(binding => el("span", { className: "binding-chip", text: textoBinding(binding) }))
-  ]);
-
 const si = (condicion, construir) => (condicion ? [construir()] : []);
+const lista = valores => el("ul", {}, valores.map(v => el("li", { text: v })));
+const etiqueta = texto => el("span", { className: "node-field__label", text: texto });
+const campo = (titulo, ...hijos) => el("div", { className: "node-field" }, [etiqueta(titulo), ...hijos]);
 
 const tarjetaNodo = (nodo, esSolucion, alSeleccionar) =>
   el("article", { className: `node-card status-${nodo.status}`, dataset: { nodeId: nodo.id } }, [
     el("div", { className: "node-card__header" }, [
-      el("button", {
-        className: "node-select",
-        text: nodo.id,
-        attrs: { type: "button", "aria-label": `Ver detalle del nodo ${nodo.id}` },
-        on: { click: () => alSeleccionar(nodo) }
-      }),
+      el("button", { className: "node-select", text: nodo.id, on: { click: () => alSeleccionar(nodo) },
+        attrs: { type: "button", "aria-label": `Ver detalle del nodo ${nodo.id}` } }),
       el("span", { className: "node-depth", text: `Profundidad ${nodo.depth}` })
     ]),
     el("span", { className: "status-label", text: etiquetasEstado[nodo.status] }),
     ...si(esSolucion, () => el("span", { className: "answer-mark", text: "Solución" })),
-    campoNodo("Meta evaluada", nodo.goal),
-    ...si(nodo.clause !== null, () => campoNodo("Cláusula aplicada", nodo.clause)),
-    ...si(nodo.pending.length > 0, () => listaNodo("Metas pendientes", nodo.pending)),
-    ...si(nodo.bindings.length > 0, () => campoBindings(nodo.bindings))
+    campo("Meta evaluada", el("code", { text: nodo.goal })),
+    ...si(nodo.clause !== null, () => campo("Cláusula aplicada", el("code", { text: nodo.clause }))),
+    ...si(nodo.pending.length > 0, () => campo("Metas pendientes", lista(nodo.pending))),
+    ...si(nodo.bindings.length > 0, () => campo("Sustituciones",
+      ...nodo.bindings.map(b => el("span", { className: "binding-chip", text: textoBinding(b) }))))
   ]);
 
-const itemNodo = (nodo, esSolucion, alSeleccionar) =>
-  el("li", { className: "tree-node", dataset: { depth: String(nodo.depth) } },
-    [tarjetaNodo(nodo, esSolucion, alSeleccionar)]);
-
-const itemDetalle = (etiqueta, valor) =>
-  el("div", { className: "detail-item" }, [el("dt", { text: etiqueta }), el("dd", { text: valor })]);
-
-const listaDetalle = (etiqueta, valores) =>
+const detalle = ([titulo, valor]) =>
   el("div", { className: "detail-item" }, [
-    el("dt", { text: etiqueta }),
-    valores.length === 0
-      ? el("dd", { text: "Ninguna" })
-      : el("dd", {}, [el("ul", {}, valores.map(valor => el("li", { text: valor })))])
+    el("dt", { text: titulo }),
+    !Array.isArray(valor) ? el("dd", { text: valor })
+      : valor.length === 0 ? el("dd", { text: "Ninguna" })
+        : el("dd", {}, [lista(valor)])
   ]);
 
 const contenidoDetalle = nodo => [
   el("h2", { text: `Detalle del nodo ${nodo.id}`, attrs: { id: "details-title" } }),
   el("dl", { className: "detail-grid" }, [
-    itemDetalle("Estado", etiquetasEstado[nodo.status]),
-    itemDetalle("Profundidad", nodo.depth),
-    itemDetalle("Padre", nodo.parent === null ? "Raíz" : nodo.parent),
-    itemDetalle("Meta evaluada", nodo.goal),
-    itemDetalle("Cláusula aplicada", nodo.clause === null ? "Ninguna (nodo raíz)" : nodo.clause),
-    listaDetalle("Metas pendientes", nodo.pending),
-    listaDetalle("Sustituciones", nodo.bindings.map(textoBinding)),
-    listaDetalle("Hijos", nodo.children.length > 0 ? nodo.children : ["Ninguno"])
-  ])
+    ["Estado", etiquetasEstado[nodo.status]],
+    ["Profundidad", nodo.depth],
+    ["Padre", nodo.parent === null ? "Raíz" : nodo.parent],
+    ["Meta evaluada", nodo.goal],
+    ["Cláusula aplicada", nodo.clause === null ? "Ninguna (nodo raíz)" : nodo.clause],
+    ["Metas pendientes", nodo.pending],
+    ["Sustituciones", nodo.bindings.map(textoBinding)],
+    ["Hijos", nodo.children.length > 0 ? nodo.children : ["Ninguno"]]
+  ].map(detalle))
 ];
 
 const mostrarMensaje = (mensaje, esError = false) => {
@@ -302,9 +202,9 @@ const mostrarMensaje = (mensaje, esError = false) => {
 
 const mostrarDetalle = nodo => {
   dom.treeRoot.querySelectorAll(".node-card").forEach(tarjeta => {
-    const seleccionada = tarjeta.dataset.nodeId === nodo.id;
-    tarjeta.classList.toggle("is-selected", seleccionada);
-    tarjeta.querySelector(".node-select").setAttribute("aria-pressed", String(seleccionada));
+    const elegida = tarjeta.dataset.nodeId === nodo.id;
+    tarjeta.classList.toggle("is-selected", elegida);
+    tarjeta.querySelector(".node-select").setAttribute("aria-pressed", String(elegida));
   });
   dom.nodeDetails.replaceChildren(...contenidoDetalle(nodo));
 };
@@ -318,62 +218,50 @@ const altoTarjeta = item => item.querySelector(".node-card").getBoundingClientRe
 
 const dibujarArbol = ({ data, nodosPorId, raiz }) => {
   dom.treeSection.hidden = false;
-
-  const idsSolucion = new Set(data.answers.map(respuesta => respuesta.node));
-  const posiciones = calcularPosiciones(raiz, nodosPorId);
-  const ancho = Math.max(posiciones.ancho, anchoVisible());
-  const desplazamiento = (ancho - posiciones.ancho) / 2;
-  const centroDe = id => desplazamiento + posiciones.centros.get(id);
+  const soluciones = new Set(data.answers.map(r => r.node));
+  const pos = calcularPosiciones(raiz, nodosPorId);
+  const ancho = Math.max(pos.ancho, anchoVisible());
+  const centroDe = id => (ancho - pos.ancho) / 2 + pos.centros.get(id);
 
   dom.treeTitle.textContent = data.query;
-  dom.treeSummary.replaceChildren(
-    itemResumen("Profundidad máxima", data.maxDepth),
-    itemResumen("Nodos", data.nodes.length),
-    itemResumen("Soluciones", data.answers.length)
-  );
+  dom.treeSummary.replaceChildren(...[
+    ["Profundidad máxima", data.maxDepth],
+    ["Nodos", data.nodes.length],
+    ["Soluciones", data.answers.length]
+  ].map(([titulo, valor]) => el("span", { className: "summary-item" },
+    [document.createTextNode(`${titulo}: `), el("strong", { text: valor })])));
   dom.treeCanvas.style.width = `${ancho}px`;
   dom.treeCanvas.style.height = "1px";
   dom.treeConnections.replaceChildren();
 
   const items = new Map(data.nodes.map(nodo => {
-    const item = itemNodo(nodo, idsSolucion.has(nodo.id), mostrarDetalle);
+    const item = el("li", { className: "tree-node", dataset: { depth: String(nodo.depth) } },
+      [tarjetaNodo(nodo, soluciones.has(nodo.id), mostrarDetalle)]);
     item.style.left = `${centroDe(nodo.id) - medidas.anchoNodo / 2}px`;
     item.style.top = "0";
     return [nodo.id, item];
   }));
   dom.treeRoot.replaceChildren(...items.values());
 
-  const nivelMaximo = maximo(data.nodes.map(nodo => nodo.depth));
-  const alturas = alturasPorNivel(
-    data.nodes.map(nodo => ({ nivel: nodo.depth, alto: altoTarjeta(items.get(nodo.id)) })),
-    nivelMaximo
-  );
+  const nivelMax = maximo(data.nodes.map(n => n.depth));
+  const alturas = range(nivelMax + 1).map(nivel =>
+    maximo(data.nodes.filter(n => n.depth === nivel).map(n => altoTarjeta(items.get(n.id)))));
   const topes = topesPorNivel(alturas);
-  const alto = topes[nivelMaximo] + alturas[nivelMaximo];
+  const alto = topes[nivelMax] + alturas[nivelMax];
 
-  data.nodes.forEach(nodo => { items.get(nodo.id).style.top = `${topes[nodo.depth]}px`; });
+  data.nodes.forEach(n => { items.get(n.id).style.top = `${topes[n.depth]}px`; });
   dom.treeCanvas.style.height = `${alto}px`;
-  dom.treeConnections.setAttribute("width", String(ancho));
-  dom.treeConnections.setAttribute("height", String(alto));
-  dom.treeConnections.setAttribute("viewBox", `0 0 ${ancho} ${alto}`);
+  [["width", ancho], ["height", alto], ["viewBox", `0 0 ${ancho} ${alto}`]]
+    .forEach(([k, v]) => dom.treeConnections.setAttribute(k, String(v)));
 
-  const segmentos = data.nodes
-    .filter(nodo => nodo.children.length > 0)
-    .flatMap(nodo => segmentosDeConexion({
-      centroPadre: centroDe(nodo.id),
-      basePadre: topes[nodo.depth] + altoTarjeta(items.get(nodo.id)),
-      topeHijos: topes[nodo.depth + 1],
-      centrosHijos: nodo.children.map(centroDe)
-    }));
-  dom.treeConnections.replaceChildren(...segmentos.map(lineaSvg));
+  dom.treeConnections.replaceChildren(...data.nodes
+    .filter(n => n.children.length > 0)
+    .flatMap(n => segmentosDeConexion(centroDe(n.id), topes[n.depth] + altoTarjeta(items.get(n.id)),
+      topes[n.depth + 1], n.children.map(centroDe)))
+    .map(lineaSvg));
 
   mostrarDetalle(raiz);
 };
-
-const mensajeDeError = error =>
-  (error instanceof SyntaxError
-    ? "No se pudo leer el archivo: el contenido no es JSON válido."
-    : error.message);
 
 const extraer = resultado => {
   if (!resultado.isOk) throw new Error(resultado.error);
@@ -382,12 +270,13 @@ const extraer = resultado => {
 
 const cargarArchivo = archivo =>
   archivo.text()
-    .then(texto => JSON.parse(texto))
+    .then(JSON.parse)
     .then(validarArbol)
     .then(extraer)
     .then(dibujarArbol)
     .then(() => mostrarMensaje(`Archivo cargado: ${archivo.name}`))
-    .catch(error => mostrarMensaje(mensajeDeError(error), true))
+    .catch(error => mostrarMensaje(error instanceof SyntaxError
+      ? "No se pudo leer el archivo: el contenido no es JSON válido." : error.message, true))
     .finally(() => { dom.fileInput.value = ""; });
 
 dom.fileInput.addEventListener("change", () => {
